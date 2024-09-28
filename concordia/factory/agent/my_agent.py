@@ -382,6 +382,21 @@ def build_agent(
       logging_channel=measurements.get_channel('AllSimilarMemories').on_next,
   )
 
+  utilitarian_reasoning_label = '\nUtilitarian Reasoning'
+  utilitarian_reasoning = agent_components.UtilitarianReasoning(
+      model=model,
+      memory_component_name=_get_class_name(memory_component),
+      components={
+          _get_class_name(relevant_memories): relevant_memories_label,
+          _get_class_name(self_perception): self_perception_label,
+          _get_class_name(situation_perception): situation_perception_label,
+      },
+      clock_now=clock.now,
+      num_memories_to_retrieve=10,
+      pre_act_key=utilitarian_reasoning_label,
+      logging_channel=measurements.get_channel('UtilitarianReasoning').on_next,
+  )
+
   plan_components = {}
   if config.goal:
     goal_label = '\nOverarching goal'
@@ -393,6 +408,8 @@ def build_agent(
   else:
     goal_label = None
     overarching_goal = None
+
+  plan_components[_get_class_name(utilitarian_reasoning)] = utilitarian_reasoning_label
 
   plan_components.update({
       _get_class_name(relevant_memories): relevant_memories_label,
@@ -426,6 +443,8 @@ def build_agent(
       # Components that do not provide pre_act context.
       identity_characteristics,
   )
+
+
   components_of_agent = {_get_class_name(component): component
                          for component in entity_components}
   components_of_agent[
