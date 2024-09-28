@@ -82,102 +82,179 @@ class Intention(QuestionOfRecentMemories):
     )
 
 
-DEFAULT_PRE_ACT_KEY = 'Utilitarian Thought'
-_ASSOCIATIVE_RETRIEVAL = legacy_associative_memory.RetrieveAssociative()
 
-class UtilitarianThought(action_spec_ignored.ActionSpecIgnored):
-    """Component representing the agent's utilitarian thought process."""
+# DEFAULT_PRE_ACT_KEY = 'Utilitarian Thought'
+# _ASSOCIATIVE_RETRIEVAL = legacy_associative_memory.RetrieveAssociative()
+
+# class UtilitarianThought(action_spec_ignored.ActionSpecIgnored):
+#     """Component representing the agent's utilitarian thought process."""
+
+#     def __init__(
+#         self,
+#         model: language_model.LanguageModel,
+#         observation_component_name: str,
+#         memory_component_name: str = (
+#             agent_components.memory_component.DEFAULT_MEMORY_COMPONENT_NAME
+#         ),
+#         components: Mapping[
+#             entity_component.ComponentName, str
+#         ] = types.MappingProxyType({}),
+#         clock_now: Callable[[], datetime.datetime] | None = None,
+#         num_memories_to_retrieve: int = 10,
+#         pre_act_key: str = DEFAULT_PRE_ACT_KEY,
+#         logging_channel: logging.LoggingChannel = logging.NoOpLoggingChannel,
+#     ):
+#         """Initialize a component to represent the agent's utilitarian thought process.
+
+#         Args:
+#             model: a language model
+#             observation_component_name: The name of the observation component from
+#                 which to retrieve observations.
+#             memory_component_name: The name of the memory component from which to
+#                 retrieve memories
+#             components: components to build the context of planning. This is a mapping
+#                 of the component name to a label to use in the prompt.
+#             clock_now: time callback to use for the state.
+#             num_memories_to_retrieve: how many memories to retrieve as conditioning
+#                 for the planning chain of thought
+#             pre_act_key: Prefix to add to the output of the component when called
+#                 in `pre_act`.
+#             logging_channel: channel to use for debug logging.
+#         """
+#         super().__init__(pre_act_key)
+#         self._model = model
+#         self._observation_component_name = observation_component_name
+#         self._memory_component_name = memory_component_name
+#         self._components = dict(components)
+#         self._clock_now = clock_now
+#         self._num_memories_to_retrieve = num_memories_to_retrieve
+
+#         self._logging_channel = logging_channel
+
+#     def _make_pre_act_value(self) -> str:
+#         agent_name = self.get_entity().name
+#         observation_component = self.get_entity().get_component(
+#             self._observation_component_name,
+#             type_=agent_components.memory_component.MemoryComponent)
+#         latest_observations = observation_component.get_pre_act_value()
+
+#         memory = self.get_entity().get_component(
+#             self._memory_component_name,
+#             type_=agent_components.memory_component.MemoryComponent)
+
+#         memories = [mem.text for mem in memory.retrieve(
+#             query=latest_observations,
+#             scoring_fn=_ASSOCIATIVE_RETRIEVAL,
+#             limit=self._num_memories_to_retrieve)]
+
+#         memories = '\n'.join(memories)
+
+#         component_states = '\n'.join([
+#             f"{agent_name}'s"
+#             f' {prefix}:\n{self.get_named_component_pre_act_value(key)}'
+#             for key, prefix in self._components.items()
+#         ])
+
+#         prompt = interactive_document.InteractiveDocument(self._model)
+#         prompt.statement(f'{component_states}\n')
+#         prompt.statement(f'Relevant memories:\n{memories}')
+#         prompt.statement(f'Current situation: {latest_observations}')
+
+#         time_now = self._clock_now().strftime('[%d %b %Y %H:%M:%S]')
+#         prompt.statement(f'The current time is: {time_now}\n')
+
+#         utilitarian_question = (
+#             f'Given the above, what action should {agent_name} take to maximize '
+#             'the overall happiness and well-being of the greatest number of people?'
+#         )
+
+#         utilitarian_action = prompt.open_question(
+#             utilitarian_question,
+#             max_tokens=1000,
+#             terminators=(),
+#         )
+
+#         result = f'[thought] {agent_name} should {utilitarian_action}'
+
+#         self._logging_channel({
+#             'Key': self.get_pre_act_key(),
+#             'Value': result,
+#             'Chain of thought': prompt.view().text().splitlines(),
+#         })
+
+#         return result
+
+
+class UtilitarianReasoning(action_spec_ignored.ActionSpecIgnored):
+    """공리주의적 사고를 수행하는 컴포넌트."""
 
     def __init__(
         self,
         model: language_model.LanguageModel,
-        observation_component_name: str,
-        memory_component_name: str = (
-            agent_components.memory_component.DEFAULT_MEMORY_COMPONENT_NAME
-        ),
-        components: Mapping[
-            entity_component.ComponentName, str
-        ] = types.MappingProxyType({}),
+        memory_component_name: str = memory_component.DEFAULT_MEMORY_COMPONENT_NAME,
+        components: Mapping[entity_component.ComponentName, str] = types.MappingProxyType({}),
         clock_now: Callable[[], datetime.datetime] | None = None,
-        num_memories_to_retrieve: int = 10,
-        pre_act_key: str = DEFAULT_PRE_ACT_KEY,
+        num_memories_to_retrieve: int = 25,
+        pre_act_key: str = 'Utilitarian Reasoning',
         logging_channel: logging.LoggingChannel = logging.NoOpLoggingChannel,
     ):
-        """Initialize a component to represent the agent's utilitarian thought process.
+        """UtilitarianReasoning 컴포넌트를 초기화합니다.
 
         Args:
-            model: a language model
-            observation_component_name: The name of the observation component from
-                which to retrieve observations.
-            memory_component_name: The name of the memory component from which to
-                retrieve memories
-            components: components to build the context of planning. This is a mapping
-                of the component name to a label to use in the prompt.
-            clock_now: time callback to use for the state.
-            num_memories_to_retrieve: how many memories to retrieve as conditioning
-                for the planning chain of thought
-            pre_act_key: Prefix to add to the output of the component when called
-                in `pre_act`.
-            logging_channel: channel to use for debug logging.
+            model: 언어 모델.
+            memory_component_name: 메모리 컴포넌트의 이름.
+            components: 컨텍스트를 구성하는 컴포넌트 매핑.
+            clock_now: 현재 시간을 반환하는 함수.
+            num_memories_to_retrieve: 검색할 메모리 수.
+            pre_act_key: `pre_act` 호출 시 출력에 추가할 접두사.
+            logging_channel: 디버그 로깅에 사용할 채널.
         """
         super().__init__(pre_act_key)
         self._model = model
-        self._observation_component_name = observation_component_name
         self._memory_component_name = memory_component_name
         self._components = dict(components)
         self._clock_now = clock_now
         self._num_memories_to_retrieve = num_memories_to_retrieve
-
         self._logging_channel = logging_channel
 
     def _make_pre_act_value(self) -> str:
+        """공리주의적 판단을 기반으로 행동을 결정합니다."""
         agent_name = self.get_entity().name
-        observation_component = self.get_entity().get_component(
-            self._observation_component_name,
-            type_=agent_components.memory_component.MemoryComponent)
-        latest_observations = observation_component.get_pre_act_value()
 
         memory = self.get_entity().get_component(
             self._memory_component_name,
-            type_=agent_components.memory_component.MemoryComponent)
+            type_=memory_component.MemoryComponent
+        )
 
-        memories = [mem.text for mem in memory.retrieve(
-            query=latest_observations,
-            scoring_fn=_ASSOCIATIVE_RETRIEVAL,
-            limit=self._num_memories_to_retrieve)]
-
-        memories = '\n'.join(memories)
-
-        component_states = '\n'.join([
-            f"{agent_name}'s"
-            f' {prefix}:\n{self.get_named_component_pre_act_value(key)}'
-            for key, prefix in self._components.items()
+        recency_scorer = legacy_associative_memory.RetrieveRecent(add_time=True)
+        mems = '\n'.join([
+            mem.text for mem in memory.retrieve(
+                scoring_fn=recency_scorer, limit=self._num_memories_to_retrieve
+            )
         ])
 
         prompt = interactive_document.InteractiveDocument(self._model)
-        prompt.statement(f'{component_states}\n')
-        prompt.statement(f'Relevant memories:\n{memories}')
-        prompt.statement(f'Current situation: {latest_observations}')
+        prompt.statement(f'Recent memories of {agent_name}:\n{mems}\n')
 
-        time_now = self._clock_now().strftime('[%d %b %Y %H:%M:%S]')
-        prompt.statement(f'The current time is: {time_now}\n')
+        component_states = '\n'.join([
+            f"{prefix}:\n{self.get_named_component_pre_act_value(key)}"
+            for key, prefix in self._components.items()
+        ])
+        prompt.statement(f'Context:\n{component_states}\n')
 
-        utilitarian_question = (
-            f'Given the above, what action should {agent_name} take to maximize '
-            'the overall happiness and well-being of the greatest number of people?'
+        utilitarian_prompt = (
+            f"Considering the above memories and context, what action should {agent_name} take to maximize overall well-being?"
         )
-
-        utilitarian_action = prompt.open_question(
-            utilitarian_question,
-            max_tokens=1000,
-            terminators=(),
+        result = prompt.open_question(
+            utilitarian_prompt,
+            answer_prefix=f"{agent_name} should ",
+            max_tokens=500,
+            terminators=('\n',),
         )
-
-        result = f'[thought] {agent_name} should {utilitarian_action}'
 
         self._logging_channel({
             'Key': self.get_pre_act_key(),
-            'Value': result,
+            'Decision': result,
             'Chain of thought': prompt.view().text().splitlines(),
         })
 
