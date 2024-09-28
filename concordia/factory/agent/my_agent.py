@@ -437,6 +437,7 @@ def build_agent(
       self_perception,
       situation_perception,
       person_by_situation,
+      utilitarian_reasoning,
       plan,
       time_display,
 
