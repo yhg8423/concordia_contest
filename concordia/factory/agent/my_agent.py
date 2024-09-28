@@ -383,7 +383,7 @@ def build_agent(
   )
 
   utilitarian_reasoning_label = '\nUtilitarian Reasoning'
-  utilitarian_reasoning = agent_components.UtilitarianReasoning(
+  utilitarian_reasoning = UtilitarianReasoning(
       model=model,
       memory_component_name=_get_class_name(memory_component),
       components={
