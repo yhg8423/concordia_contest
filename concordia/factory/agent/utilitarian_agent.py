@@ -313,6 +313,7 @@ def build_agent(
   utilitarian_reasoning_label = '\nUtilitarian Reasoning'
   utilitarian_reasoning = UtilitarianReasoning(
       model=model,
+      observation_component_name=_get_class_name(observation),
       components={
           _get_class_name(relevant_memories): relevant_memories_label,
           _get_class_name(self_perception): self_perception_label,
