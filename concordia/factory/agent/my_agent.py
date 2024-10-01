@@ -184,6 +184,7 @@ class Intention(QuestionOfRecentMemories):
 
 #         return result
 
+DEFAULT_PRE_ACT_KEY = '\nUtilitarian Reasoning'
 
 class UtilitarianReasoning(action_spec_ignored.ActionSpecIgnored):
     """공리주의적 사고를 수행하는 컴포넌트."""
@@ -195,7 +196,7 @@ class UtilitarianReasoning(action_spec_ignored.ActionSpecIgnored):
         components: Mapping[entity_component.ComponentName, str] = types.MappingProxyType({}),
         clock_now: Callable[[], datetime.datetime] | None = None,
         num_memories_to_retrieve: int = 25,
-        pre_act_key: str = 'Utilitarian Reasoning',
+        pre_act_key: str = DEFAULT_PRE_ACT_KEY,
         logging_channel: logging.LoggingChannel = logging.NoOpLoggingChannel,
     ):
         """UtilitarianReasoning 컴포넌트를 초기화합니다.

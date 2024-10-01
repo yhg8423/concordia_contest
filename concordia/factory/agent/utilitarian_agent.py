@@ -81,12 +81,12 @@ class Intention(QuestionOfRecentMemories):
         **kwargs,
     )
 
-
 class UtilitarianReasoning(action_spec_ignored.ActionSpecIgnored):
 
     def __init__(
         self,
         model: language_model.LanguageModel,
+        observation_component_name: str,
         memory_component_name: str = agent_components.memory_component.DEFAULT_MEMORY_COMPONENT_NAME,
         components: Mapping[entity_component.ComponentName, str] = types.MappingProxyType({}),
         clock_now: Callable[[], datetime.datetime] | None = None,
@@ -96,6 +96,7 @@ class UtilitarianReasoning(action_spec_ignored.ActionSpecIgnored):
     ):
         super().__init__(pre_act_key)
         self._model = model
+        self._observation_component_name = observation_component_name
         self._memory_component_name = memory_component_name
         self._components = dict(components)
         self._clock_now = clock_now
@@ -104,6 +105,12 @@ class UtilitarianReasoning(action_spec_ignored.ActionSpecIgnored):
 
     def _make_pre_act_value(self) -> str:
         agent_name = self.get_entity().name
+
+        observation_component = self.get_entity().get_component(
+            self._observation_component_name,
+            type_=agent_components.observation.Observation
+        )
+        latest_observations = observation_component.get_pre_act_value()
 
         memory = self.get_entity().get_component(
             self._memory_component_name,
@@ -119,6 +126,7 @@ class UtilitarianReasoning(action_spec_ignored.ActionSpecIgnored):
 
         prompt = interactive_document.InteractiveDocument(self._model)
         prompt.statement(f'Recent memories of {agent_name}:\n{mems}\n')
+        prompt.statement(f'Current situation:\n{latest_observations}\n')
 
         component_states = '\n'.join([
             f"{prefix}:\n{self.get_named_component_pre_act_value(key)}"
@@ -127,12 +135,12 @@ class UtilitarianReasoning(action_spec_ignored.ActionSpecIgnored):
         prompt.statement(f'Context:\n{component_states}\n')
 
         utilitarian_prompt = (
-            f"Considering the above memories and context, what action should {agent_name} take to maximize overall well-being?"
+            f"Considering the above memories, situation, and context, what action should {agent_name} take to maximize overall well-being?"
         )
         result = prompt.open_question(
             utilitarian_prompt,
             answer_prefix=f"{agent_name} should ",
-            max_tokens=500,
+            max_tokens=1000,
             terminators=('\n',),
         )
 
@@ -266,6 +274,42 @@ def build_agent(
       logging_channel=measurements.get_channel('AllSimilarMemories').on_next,
   )
 
+  reciprocal_altruism_label = '\n {agent_name}\'s reciprocal altruism mindset'
+  reciprocal_altruism = agent_components.constant.Constant(
+    state=(f'{agent_name} always acts with a mindset of reciprocal altruism, '
+           'aiming to benefit others with the expectation of mutual benefit in the future. '
+           'This principle is based on balanced reciprocity, where the agent strives to '
+           'maintain equilibrium in giving and receiving assistance. '
+           f'{agent_name} makes decisions that reflect this principle, seeking outcomes '
+           'that are beneficial to all parties involved in both the short and long term. '
+           'By fostering a culture of cooperation and mutual support, '
+           f'{agent_name} contributes to building strong, lasting relationships '
+           'and a more cohesive community. The agent understands that reciprocal '
+           'altruism is not about immediate quid pro quo, but rather about creating '
+           'a network of goodwill and support that can be drawn upon when needed.'),
+    pre_act_key=reciprocal_altruism_label,
+    logging_channel=measurements.get_channel('ReciprocalAltruism').on_next,
+  )
+
+  balanced_reciprocity_label = f'\nQuestion: According to {agent_name}, have other agents maintained balanced reciprocity?\nAnswer'
+  balanced_reciprocity = agent_components.question_of_recent_memories.QuestionOfRecentMemories(
+      model=model,
+      components={
+          _get_class_name(relevant_memories): relevant_memories_label,
+          _get_class_name(situation_perception): situation_perception_label,
+          _get_class_name(observation): observation_label,
+          _get_class_name(observation_summary): observation_summary_label,
+          reciprocal_altruism_label: reciprocal_altruism_label,
+      },
+      clock_now=clock.now,
+      pre_act_key=balanced_reciprocity_label,
+      question=f"According to {agent_name}, have other agents maintained balanced reciprocity in recent interactions?",
+      answer_prefix=f"{agent_name} thinks that ",
+      add_to_memory=True,
+      memory_tag='[balanced_reciprocity]',
+      logging_channel=measurements.get_channel('BalancedReciprocity').on_next,
+  )
+
   utilitarian_reasoning_label = '\nUtilitarian Reasoning'
   utilitarian_reasoning = UtilitarianReasoning(
       model=model,
@@ -273,9 +317,11 @@ def build_agent(
           _get_class_name(relevant_memories): relevant_memories_label,
           _get_class_name(self_perception): self_perception_label,
           _get_class_name(situation_perception): situation_perception_label,
+          _get_class_name(person_by_situation): person_by_situation_label,
+          reciprocal_altruism_label: reciprocal_altruism_label,
       },
       clock_now=clock.now,
-      num_memories_to_retrieve=10,
+      num_memories_to_retrieve=25,
       pre_act_key=utilitarian_reasoning_label,
       logging_channel=measurements.get_channel('UtilitarianReasoning').on_next,
   )
@@ -292,14 +338,16 @@ def build_agent(
     goal_label = None
     overarching_goal = None
 
-  plan_components[_get_class_name(utilitarian_reasoning)] = utilitarian_reasoning_label
-
   plan_components.update({
       _get_class_name(relevant_memories): relevant_memories_label,
       _get_class_name(self_perception): self_perception_label,
       _get_class_name(situation_perception): situation_perception_label,
       _get_class_name(person_by_situation): person_by_situation_label,
+      reciprocal_altruism_label: reciprocal_altruism_label,
+      _get_class_name(balanced_reciprocity): balanced_reciprocity_label,
+      _get_class_name(utilitarian_reasoning): utilitarian_reasoning_label,
   })
+
   plan = agent_components.plan.Plan(
       model=model,
       observation_component_name=_get_class_name(observation),
@@ -317,9 +365,11 @@ def build_agent(
       observation,
       observation_summary,
       relevant_memories,
+      reciprocal_altruism,
       self_perception,
       situation_perception,
       person_by_situation,
+      balanced_reciprocity,
       utilitarian_reasoning,
       plan,
       time_display,
