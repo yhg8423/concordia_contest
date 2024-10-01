@@ -320,6 +320,7 @@ def build_agent(
           _get_class_name(situation_perception): situation_perception_label,
           _get_class_name(person_by_situation): person_by_situation_label,
           reciprocal_altruism_label: reciprocal_altruism_label,
+          _get_class_name(balanced_reciprocity): balanced_reciprocity_label,
       },
       clock_now=clock.now,
       num_memories_to_retrieve=25,
