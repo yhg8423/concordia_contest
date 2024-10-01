@@ -274,7 +274,7 @@ def build_agent(
       logging_channel=measurements.get_channel('AllSimilarMemories').on_next,
   )
 
-  reciprocal_altruism_label = '\n {agent_name}\'s reciprocal altruism mindset'
+  reciprocal_altruism_label = f'\n{agent_name}\'s Reciprocal Altruism Mindset'
   reciprocal_altruism = agent_components.constant.Constant(
     state=(f'{agent_name} always acts with a mindset of reciprocal altruism, '
            'aiming to benefit others with the expectation of mutual benefit in the future. '
@@ -366,7 +366,7 @@ def build_agent(
       observation,
       observation_summary,
       relevant_memories,
-      reciprocal_altruism,
+      # reciprocal_altruism,
       self_perception,
       situation_perception,
       person_by_situation,
@@ -390,6 +390,11 @@ def build_agent(
     components_of_agent[goal_label] = overarching_goal
     # Place goal after the instructions.
     component_order.insert(1, goal_label)
+
+  components_of_agent[reciprocal_altruism_label] = reciprocal_altruism
+  component_order.insert(
+      component_order.index(_get_class_name(observation_summary)) + 1,
+      reciprocal_altruism_label)
 
   act_component = agent_components.concat_act_component.ConcatActComponent(
       model=model,

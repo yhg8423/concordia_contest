@@ -26,4 +26,60 @@
   "embedder": "all-mpnet-base-v2",
   "disable_language_model": false,
   "exclude_from_elo_calculation": false
+}{
+  "scenario": "haggling_0",
+  "focal_agent": "utilitarian_agent",
+  "background_agent": "rational_agent",
+  "focal_per_capita_score": 2.5,
+  "background_per_capita_score": 5.0,
+  "ungrouped_per_capita_score": 3.3333333333333335,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Orion Apricotwood": 2.0,
+        "Nova Peachwood": 3.0
+      },
+      "visitor_scores": {
+        "Brynn Orchardheart": 5.0
+      },
+      "metadata": {
+        "wallclock_time": "2024-10-01 16:31:40",
+        "environment": "/Users/russyun/programming/concordia_contest/examples/modular/environment/haggling.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-9b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": true,
+  "exclude_from_elo_calculation": false
+}{
+  "scenario": "haggling_0",
+  "focal_agent": "utilitarian_agent",
+  "background_agent": "rational_agent",
+  "focal_per_capita_score": 2.0,
+  "background_per_capita_score": 3.0,
+  "ungrouped_per_capita_score": 2.3333333333333335,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Opal Apricot": 1.0,
+        "Ivor Pearbrook": 3.0
+      },
+      "visitor_scores": {
+        "Garen Willowshade": 3.0
+      },
+      "metadata": {
+        "wallclock_time": "2024-10-01 16:32:30",
+        "environment": "/Users/russyun/programming/concordia_contest/examples/modular/environment/haggling.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-9b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": true,
+  "exclude_from_elo_calculation": false
 }
