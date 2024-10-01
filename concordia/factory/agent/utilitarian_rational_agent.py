@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""An Agent Factory."""
+
 import datetime
 from collections.abc import Callable, Collection, Mapping
 import types
@@ -32,53 +34,6 @@ from concordia.document import interactive_document
 from concordia.language_model import language_model
 from concordia.typing import entity_component
 from concordia.typing import logging
-
-
-DEFAULT_PLANNING_HORIZON = 'the rest of the day, focusing most on the near term'
-
-class Belief(QuestionOfRecentMemories):
-  """This component represents the agent's beliefs."""
-
-  def __init__(self, **kwargs):
-    super().__init__(
-        question=(
-            "What does {agent_name} believe to be true about the current situation?"
-        ),
-        answer_prefix="{agent_name} believes that ",
-        add_to_memory=True,
-        memory_tag='[belief]',
-        **kwargs,
-    )
-
-
-class Desire(QuestionOfRecentMemories):
-  """This component represents the agent's desires."""
-
-  def __init__(self, **kwargs):
-    super().__init__(
-        question=(
-            "What does {agent_name} desire to happen in the current situation?"
-        ),
-        answer_prefix="{agent_name} desires that ",
-        add_to_memory=True,
-        memory_tag='[desire]',
-        **kwargs,
-    )
-
-
-class Intention(QuestionOfRecentMemories):
-  """This component represents the agent's intentions."""
-
-  def __init__(self, **kwargs):
-    super().__init__(
-        question=(
-            "What does {agent_name} intend to do to achieve their desires in the current situation?"
-        ),
-        answer_prefix="{agent_name} intends to ",
-        add_to_memory=True,
-        memory_tag='[intention]',
-        **kwargs,
-    )
 
 class UtilitarianReasoning(action_spec_ignored.ActionSpecIgnored):
 
@@ -191,6 +146,12 @@ def build_agent(
       logging_channel=measurements.get_channel('Instructions').on_next,
   )
 
+  time_display = agent_components.report_function.ReportFunction(
+      function=clock.current_time_interval_str,
+      pre_act_key='\nCurrent time',
+      logging_channel=measurements.get_channel('TimeDisplay').on_next,
+  )
+
   observation_label = '\nObservation'
   observation = agent_components.observation.Observation(
       clock_now=clock.now,
@@ -198,7 +159,7 @@ def build_agent(
       pre_act_key=observation_label,
       logging_channel=measurements.get_channel('Observation').on_next,
   )
-  observation_summary_label = '\nSummary of recent observations'
+  observation_summary_label = 'Summary of recent observations'
   observation_summary = agent_components.observation.ObservationSummary(
       model=model,
       clock_now=clock.now,
@@ -207,61 +168,7 @@ def build_agent(
       pre_act_key=observation_summary_label,
       logging_channel=measurements.get_channel('ObservationSummary').on_next,
   )
-  time_display = agent_components.report_function.ReportFunction(
-      function=clock.current_time_interval_str,
-      pre_act_key='\nCurrent time',
-      logging_channel=measurements.get_channel('TimeDisplay').on_next,
-  )
-  identity_label = '\nIdentity characteristics'
-  identity_characteristics = (
-      agent_components.question_of_query_associated_memories.IdentityWithoutPreAct(
-          model=model,
-          logging_channel=measurements.get_channel(
-              'IdentityWithoutPreAct'
-          ).on_next,
-          pre_act_key=identity_label,
-      )
-  )
-  self_perception_label = (
-      f'\nQuestion: What kind of person is {agent_name}?\nAnswer')
-  self_perception = agent_components.question_of_recent_memories.SelfPerception(
-      model=model,
-      components={_get_class_name(identity_characteristics): identity_label},
-      pre_act_key=self_perception_label,
-      logging_channel=measurements.get_channel('SelfPerception').on_next,
-  )
-  situation_perception_label = (
-      f'\nQuestion: What kind of situation is {agent_name} in '
-      'right now?\nAnswer')
-  situation_perception = (
-      agent_components.question_of_recent_memories.SituationPerception(
-          model=model,
-          components={
-              _get_class_name(observation): observation_label,
-              _get_class_name(observation_summary): observation_summary_label,
-          },
-          clock_now=clock.now,
-          pre_act_key=situation_perception_label,
-          logging_channel=measurements.get_channel(
-              'SituationPerception'
-          ).on_next,
-      )
-  )
-  person_by_situation_label = (
-      f'\nQuestion: What would a person like {agent_name} do in '
-      'a situation like this?\nAnswer')
-  person_by_situation = (
-      agent_components.question_of_recent_memories.PersonBySituation(
-          model=model,
-          components={
-              _get_class_name(self_perception): self_perception_label,
-              _get_class_name(situation_perception): situation_perception_label,
-          },
-          clock_now=clock.now,
-          pre_act_key=person_by_situation_label,
-          logging_channel=measurements.get_channel('PersonBySituation').on_next,
-      )
-  )
+
   relevant_memories_label = '\nRecalled memories and observations'
   relevant_memories = agent_components.all_similar_memories.AllSimilarMemories(
       model=model,
@@ -295,7 +202,6 @@ def build_agent(
       model=model,
       components={
           _get_class_name(relevant_memories): relevant_memories_label,
-          _get_class_name(situation_perception): situation_perception_label,
           _get_class_name(observation): observation_label,
           _get_class_name(observation_summary): observation_summary_label,
           reciprocal_altruism_label: reciprocal_altruism_label,
@@ -315,9 +221,6 @@ def build_agent(
       observation_component_name=_get_class_name(observation),
       components={
           _get_class_name(relevant_memories): relevant_memories_label,
-          _get_class_name(self_perception): self_perception_label,
-          _get_class_name(situation_perception): situation_perception_label,
-          _get_class_name(person_by_situation): person_by_situation_label,
           reciprocal_altruism_label: reciprocal_altruism_label,
           _get_class_name(balanced_reciprocity): balanced_reciprocity_label,
       },
@@ -327,64 +230,83 @@ def build_agent(
       logging_channel=measurements.get_channel('UtilitarianReasoning').on_next,
   )
 
-  plan_components = {}
+  options_perception_components = {}
   if config.goal:
     goal_label = '\nOverarching goal'
     overarching_goal = agent_components.constant.Constant(
         state=config.goal,
         pre_act_key=goal_label,
         logging_channel=measurements.get_channel(goal_label).on_next)
-    plan_components[goal_label] = goal_label
+    options_perception_components[goal_label] = goal_label
   else:
     goal_label = None
     overarching_goal = None
 
-  plan_components.update({
+  options_perception_components.update({
+      _get_class_name(observation): observation_label,
+      _get_class_name(observation_summary): observation_summary_label,
       _get_class_name(relevant_memories): relevant_memories_label,
-      _get_class_name(self_perception): self_perception_label,
-      _get_class_name(situation_perception): situation_perception_label,
-      _get_class_name(person_by_situation): person_by_situation_label,
+  })
+  options_perception_label = (
+      f'\nQuestion: Which options are available to {agent_name} '
+      'right now?\nAnswer')
+  options_perception = (
+      agent_components.question_of_recent_memories.AvailableOptionsPerception(
+          model=model,
+          components=options_perception_components,
+          clock_now=clock.now,
+          pre_act_key=options_perception_label,
+          logging_channel=measurements.get_channel(
+              'AvailableOptionsPerception'
+          ).on_next,
+      )
+  )
+  best_option_perception_label = (
+      f'\nQuestion: Of the options available to {agent_name}, and '
+      'given their goal, which choice of action or strategy is '
+      f'best for {agent_name} to take right now?\nAnswer')
+  best_option_perception = {}
+  if config.goal:
+    best_option_perception[goal_label] = goal_label
+  best_option_perception.update({
+      _get_class_name(observation): observation_label,
+      _get_class_name(observation_summary): observation_summary_label,
+      _get_class_name(relevant_memories): relevant_memories_label,
+      _get_class_name(options_perception): options_perception_label,
       reciprocal_altruism_label: reciprocal_altruism_label,
       _get_class_name(balanced_reciprocity): balanced_reciprocity_label,
-      _get_class_name(utilitarian_reasoning): utilitarian_reasoning_label,
+      _get_class_name(utilitarian_reasoning): utilitarian_reasoning_label
   })
-
-  plan = agent_components.plan.Plan(
-      model=model,
-      observation_component_name=_get_class_name(observation),
-      components=plan_components,
-      clock_now=clock.now,
-      goal_component_name=_get_class_name(person_by_situation),
-      horizon=DEFAULT_PLANNING_HORIZON,
-      pre_act_key='\nPlan',
-      logging_channel=measurements.get_channel('Plan').on_next,
+  best_option_perception = (
+      agent_components.question_of_recent_memories.BestOptionPerception(
+          model=model,
+          components=best_option_perception,
+          clock_now=clock.now,
+          pre_act_key=best_option_perception_label,
+          logging_channel=measurements.get_channel(
+              'BestOptionPerception'
+          ).on_next,
+      )
   )
 
   entity_components = (
       # Components that provide pre_act context.
       instructions,
+      time_display,
       observation,
       observation_summary,
       relevant_memories,
-      # reciprocal_altruism,
-      self_perception,
-      situation_perception,
-      person_by_situation,
       balanced_reciprocity,
       utilitarian_reasoning,
-      plan,
-      time_display,
-
-      # Components that do not provide pre_act context.
-      identity_characteristics,
+      options_perception,
+      best_option_perception,
   )
-
-
   components_of_agent = {_get_class_name(component): component
                          for component in entity_components}
   components_of_agent[
       agent_components.memory_component.DEFAULT_MEMORY_COMPONENT_NAME] = (
           agent_components.memory_component.MemoryComponent(raw_memory))
+
   component_order = list(components_of_agent.keys())
   if overarching_goal is not None:
     components_of_agent[goal_label] = overarching_goal
