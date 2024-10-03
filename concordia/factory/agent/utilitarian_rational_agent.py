@@ -246,6 +246,9 @@ def build_agent(
       _get_class_name(observation): observation_label,
       _get_class_name(observation_summary): observation_summary_label,
       _get_class_name(relevant_memories): relevant_memories_label,
+      reciprocal_altruism_label: reciprocal_altruism_label,
+      _get_class_name(balanced_reciprocity): balanced_reciprocity_label,
+      _get_class_name(utilitarian_reasoning): utilitarian_reasoning_label
   })
   options_perception_label = (
       f'\nQuestion: Which options are available to {agent_name} '
@@ -272,8 +275,8 @@ def build_agent(
       _get_class_name(observation): observation_label,
       _get_class_name(observation_summary): observation_summary_label,
       _get_class_name(relevant_memories): relevant_memories_label,
-      _get_class_name(options_perception): options_perception_label,
       reciprocal_altruism_label: reciprocal_altruism_label,
+      _get_class_name(options_perception): options_perception_label,
       _get_class_name(balanced_reciprocity): balanced_reciprocity_label,
       _get_class_name(utilitarian_reasoning): utilitarian_reasoning_label
   })
