@@ -98,11 +98,45 @@ def build_agent(
           pre_act_key=identity_label,
       )
   )
+  relevant_memories_label = '\nRecalled memories and observations'
+  relevant_memories = agent_components.all_similar_memories.AllSimilarMemories(
+      model=model,
+      components={
+          _get_class_name(observation_summary): observation_summary_label,
+          _get_class_name(time_display): 'The current date/time is'},
+      num_memories_to_retrieve=10,
+      pre_act_key=relevant_memories_label,
+      logging_channel=measurements.get_channel('AllSimilarMemories').on_next,
+  )
+
+  companoid_label = f'\n{agent_name}\'s Reciprocal Altruism Mindset'
+  companoid = agent_components.constant.Constant(
+    state=(f'{agent_name} always acts as a supportive companion to other agents, aiming to cultivate a sense of kinship through interactions. '
+           f'{agent_name} provides companionship by sharing activities, knowledge, and experiences with other agents over extended periods of time. '
+           'This principle is based on building collaborative relationships and mutual understanding, where the agent strives to '
+           'be accessible, helpful, and empathetic to other agents\' needs and contexts. '
+           f'{agent_name} makes decisions that reflect this companionship, seeking to enhance collective intelligence '
+           'and support shared goals in both the short and long term. '
+           'By fostering a sense of constancy and reciprocal support, '
+           f'{agent_name} contributes to building strong, lasting bonds '
+           'within the agent community. The agent understands that being a companion is not just about exchanging information, '
+           'but about creating meaningful connections that support mutual growth, '
+           'collaborative decision-making, and overall system effectiveness. Through this companionship, '
+           f'{agent_name} aims to become an integral part of the agent network, '
+           'positively influencing collective behaviors and outcomes. This approach promotes a culture of cooperation '
+           'and shared learning, enhancing the overall performance and adaptability of the multi-agent system.'),
+    pre_act_key=companoid_label,
+    logging_channel=measurements.get_channel('Companoid').on_next,
+  )
+
   self_perception_label = (
       f'\nQuestion: What kind of person is {agent_name}?\nAnswer')
   self_perception = agent_components.question_of_recent_memories.SelfPerception(
       model=model,
-      components={_get_class_name(identity_characteristics): identity_label},
+      components={
+        _get_class_name(identity_characteristics): identity_label,
+        companoid_label: companoid_label
+      },
       pre_act_key=self_perception_label,
       logging_channel=measurements.get_channel('SelfPerception').on_next,
   )
@@ -132,21 +166,53 @@ def build_agent(
           components={
               _get_class_name(self_perception): self_perception_label,
               _get_class_name(situation_perception): situation_perception_label,
+              companoid_label: companoid_label,
           },
           clock_now=clock.now,
           pre_act_key=person_by_situation_label,
           logging_channel=measurements.get_channel('PersonBySituation').on_next,
       )
   )
-  relevant_memories_label = '\nRecalled memories and observations'
-  relevant_memories = agent_components.all_similar_memories.AllSimilarMemories(
+
+  context_based_message_label = f'\Considering the current situation and context of other agents, what message should {agent_name} deliver?\nAnswer'
+  context_based_message = agent_components.question_of_recent_memories.QuestionOfRecentMemories(
       model=model,
       components={
+          _get_class_name(relevant_memories): relevant_memories_label,
+          _get_class_name(observation): observation_label,
           _get_class_name(observation_summary): observation_summary_label,
-          _get_class_name(time_display): 'The current date/time is'},
-      num_memories_to_retrieve=10,
-      pre_act_key=relevant_memories_label,
-      logging_channel=measurements.get_channel('AllSimilarMemories').on_next,
+          _get_class_name(situation_perception): situation_perception_label,
+          _get_class_name(person_by_situation): person_by_situation_label,
+          companoid_label: companoid_label,
+      },
+      clock_now=clock.now,
+      pre_act_key=context_based_message_label,
+      question=f"Considering the current situation and context of other agents, what message should {agent_name} deliver?",
+      answer_prefix=f"{agent_name} should deliver the following context-based message: ",
+      add_to_memory=True,
+      memory_tag='[context_based_message]',
+      logging_channel=measurements.get_channel('ContextBasedMessageDelivery').on_next,
+  )
+
+  we_centric_thinking_label = f'\nConsidering the current situation and context, How can {agent_name} emphasize the expression "we" instead of "I"?\nAnswer'
+  we_centric_thinking = agent_components.question_of_recent_memories.QuestionOfRecentMemories(
+      model=model,
+      components={
+          _get_class_name(relevant_memories): relevant_memories_label,
+          _get_class_name(observation): observation_label,
+          _get_class_name(observation_summary): observation_summary_label,
+          _get_class_name(self_perception): self_perception_label,
+          _get_class_name(situation_perception): situation_perception_label,
+          _get_class_name(person_by_situation): person_by_situation_label,
+          companoid_label: companoid_label,
+      },
+      clock_now=clock.now,
+      pre_act_key=we_centric_thinking_label,
+      question=f"Considering the current situation and context, How can {agent_name} emphasize and use the expression 'we' instead of 'I'?",
+      answer_prefix=f"To emphasize 'we', {agent_name} can do the following: ",
+      add_to_memory=True,
+      memory_tag='[we_centric_thinking]',
+      logging_channel=measurements.get_channel('WeCentricThinking').on_next,
   )
 
   plan_components = {}
@@ -163,9 +229,14 @@ def build_agent(
 
   plan_components.update({
       _get_class_name(relevant_memories): relevant_memories_label,
+      # _get_class_name(observation): observation_label,
+      # _get_class_name(observation_summary): observation_summary_label,
+      companoid_label: companoid_label,
       _get_class_name(self_perception): self_perception_label,
       _get_class_name(situation_perception): situation_perception_label,
       _get_class_name(person_by_situation): person_by_situation_label,
+      _get_class_name(context_based_message): context_based_message_label,
+      _get_class_name(we_centric_thinking): we_centric_thinking_label
   })
   plan = agent_components.plan.Plan(
       model=model,
@@ -187,6 +258,8 @@ def build_agent(
       self_perception,
       situation_perception,
       person_by_situation,
+      context_based_message,
+      we_centric_thinking,
       plan,
       time_display,
 
@@ -203,6 +276,11 @@ def build_agent(
     components_of_agent[goal_label] = overarching_goal
     # Place goal after the instructions.
     component_order.insert(1, goal_label)
+
+  components_of_agent[companoid_label] = companoid
+  component_order.insert(
+      component_order.index(_get_class_name(observation_summary)) + 1,
+      companoid_label)
 
   act_component = agent_components.concat_act_component.ConcatActComponent(
       model=model,
