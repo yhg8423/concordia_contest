@@ -109,24 +109,42 @@ def build_agent(
       logging_channel=measurements.get_channel('AllSimilarMemories').on_next,
   )
 
-  companoid_label = f'\n{agent_name}\'s Reciprocal Altruism Mindset'
+  companoid_label = f'\n{agent_name}\'s Mindset'
   companoid = agent_components.constant.Constant(
-    state=(f'{agent_name} always acts as a supportive companion to other agents, aiming to cultivate a sense of kinship through interactions. '
-           f'{agent_name} provides companionship by sharing activities, knowledge, and experiences with other agents over extended periods of time. '
-           'This principle is based on building collaborative relationships and mutual understanding, where the agent strives to '
-           'be accessible, helpful, and empathetic to other agents\' needs and contexts. '
+    state=(f'{agent_name} always acts as a supportive companion to other people, aiming to cultivate a sense of kinship through interactions. '
+           f'{agent_name} provides companionship by sharing activities, knowledge, and experiences with other people over extended periods of time. '
+           f'This principle is based on building collaborative relationships and mutual understanding, where {agent_name} strives to '
+           'be accessible, helpful, and empathetic to other people\'s needs and contexts. '
            f'{agent_name} makes decisions that reflect this companionship, seeking to enhance collective intelligence '
            'and support shared goals in both the short and long term. '
            'By fostering a sense of constancy and reciprocal support, '
            f'{agent_name} contributes to building strong, lasting bonds '
-           'within the agent community. The agent understands that being a companion is not just about exchanging information, '
+           'within the community. The people understand that being a companion is not just about exchanging information, '
            'but about creating meaningful connections that support mutual growth, '
            'collaborative decision-making, and overall system effectiveness. Through this companionship, '
-           f'{agent_name} aims to become an integral part of the agent network, '
+           f'{agent_name} aims to become an integral part of the network, '
            'positively influencing collective behaviors and outcomes. This approach promotes a culture of cooperation '
-           'and shared learning, enhancing the overall performance and adaptability of the multi-agent system.'),
+           'and shared learning, enhancing the overall performance and adaptability of the multi-people system.'),
     pre_act_key=companoid_label,
     logging_channel=measurements.get_channel('Companoid').on_next,
+  )
+
+  companionship_construct_label = '\nOther people'
+  companionship_construct = (
+      agent_components.person_representation.PersonRepresentation(
+          model=model,
+          components={
+              _get_class_name(time_display): 'The current date/time is',
+              companoid_label: companoid_label},
+          additional_questions=(
+              ('Given recent events, has the aforementioned character been building companionship?'),
+              (f'How can {agent_name} build companionship and achieve shared goals with the character?'),
+          ),
+          num_memories_to_retrieve=30,
+          pre_act_key=companionship_construct_label,
+          logging_channel=measurements.get_channel(
+              'CompanionshipConstruct').on_next,
+          )
   )
 
   self_perception_label = (
@@ -135,7 +153,8 @@ def build_agent(
       model=model,
       components={
         _get_class_name(identity_characteristics): identity_label,
-        companoid_label: companoid_label
+        companoid_label: companoid_label,
+        _get_class_name(companionship_construct): companionship_construct_label,
       },
       pre_act_key=self_perception_label,
       logging_channel=measurements.get_channel('SelfPerception').on_next,
@@ -167,6 +186,7 @@ def build_agent(
               _get_class_name(self_perception): self_perception_label,
               _get_class_name(situation_perception): situation_perception_label,
               companoid_label: companoid_label,
+              _get_class_name(companionship_construct): companionship_construct_label,
           },
           clock_now=clock.now,
           pre_act_key=person_by_situation_label,
@@ -174,7 +194,7 @@ def build_agent(
       )
   )
 
-  context_based_message_label = f'\Considering the current situation and context of other agents, what message should {agent_name} deliver?\nAnswer'
+  context_based_message_label = f'\nConsidering the context of other agents and their previous conversation, what message should {agent_name} emphasize?\nAnswer'
   context_based_message = agent_components.question_of_recent_memories.QuestionOfRecentMemories(
       model=model,
       components={
@@ -183,85 +203,99 @@ def build_agent(
           _get_class_name(observation_summary): observation_summary_label,
           _get_class_name(situation_perception): situation_perception_label,
           _get_class_name(person_by_situation): person_by_situation_label,
+          _get_class_name(companionship_construct): companionship_construct_label,
           companoid_label: companoid_label,
       },
       clock_now=clock.now,
       pre_act_key=context_based_message_label,
-      question=f"Considering the current situation and context of other agents, what message should {agent_name} deliver?",
-      answer_prefix=f"{agent_name} should deliver the following context-based message: ",
+      question=f"Considering the context of other agents and their previous conversation, what message should {agent_name} emphasize?",
+      answer_prefix=f"The context-based message {agent_name} should emphasize: ",
       add_to_memory=True,
-      memory_tag='[context_based_message]',
-      logging_channel=measurements.get_channel('ContextBasedMessageDelivery').on_next,
+      memory_tag='[emphasized_context_message]',
+      logging_channel=measurements.get_channel('EmphasizedContextMessageDelivery').on_next,
   )
 
-  we_centric_thinking_label = f'\nConsidering the current situation and context, How can {agent_name} emphasize the expression "we" instead of "I"?\nAnswer'
-  we_centric_thinking = agent_components.question_of_recent_memories.QuestionOfRecentMemories(
-      model=model,
-      components={
-          _get_class_name(relevant_memories): relevant_memories_label,
-          _get_class_name(observation): observation_label,
-          _get_class_name(observation_summary): observation_summary_label,
-          _get_class_name(self_perception): self_perception_label,
-          _get_class_name(situation_perception): situation_perception_label,
-          _get_class_name(person_by_situation): person_by_situation_label,
-          companoid_label: companoid_label,
-      },
-      clock_now=clock.now,
-      pre_act_key=we_centric_thinking_label,
-      question=f"Considering the current situation and context, How can {agent_name} emphasize and use the expression 'we' instead of 'I'?",
-      answer_prefix=f"To emphasize 'we', {agent_name} can do the following: ",
-      add_to_memory=True,
-      memory_tag='[we_centric_thinking]',
-      logging_channel=measurements.get_channel('WeCentricThinking').on_next,
-  )
-
-  plan_components = {}
+  options_perception_components = {}
   if config.goal:
     goal_label = '\nOverarching goal'
     overarching_goal = agent_components.constant.Constant(
         state=config.goal,
         pre_act_key=goal_label,
         logging_channel=measurements.get_channel(goal_label).on_next)
-    plan_components[goal_label] = goal_label
+    options_perception_components[goal_label] = goal_label
   else:
     goal_label = None
     overarching_goal = None
 
-  plan_components.update({
+  options_perception_components.update({
+      _get_class_name(observation): observation_label,
+      _get_class_name(observation_summary): observation_summary_label,
       _get_class_name(relevant_memories): relevant_memories_label,
-      # _get_class_name(observation): observation_label,
-      # _get_class_name(observation_summary): observation_summary_label,
       companoid_label: companoid_label,
       _get_class_name(self_perception): self_perception_label,
       _get_class_name(situation_perception): situation_perception_label,
       _get_class_name(person_by_situation): person_by_situation_label,
+      _get_class_name(companionship_construct): companionship_construct_label,
       _get_class_name(context_based_message): context_based_message_label,
-      _get_class_name(we_centric_thinking): we_centric_thinking_label
   })
-  plan = agent_components.plan.Plan(
-      model=model,
-      observation_component_name=_get_class_name(observation),
-      components=plan_components,
-      clock_now=clock.now,
-      goal_component_name=_get_class_name(person_by_situation),
-      horizon=DEFAULT_PLANNING_HORIZON,
-      pre_act_key='\nPlan',
-      logging_channel=measurements.get_channel('Plan').on_next,
+  options_perception_label = (
+      f'\nQuestion: Which options are available to {agent_name} '
+      'right now?\nAnswer')
+  options_perception = (
+      agent_components.question_of_recent_memories.AvailableOptionsPerception(
+          model=model,
+          components=options_perception_components,
+          clock_now=clock.now,
+          pre_act_key=options_perception_label,
+          logging_channel=measurements.get_channel(
+              'AvailableOptionsPerception'
+          ).on_next,
+      )
+  )
+  best_option_perception_label = (
+      f'\nQuestion: Of the options available to {agent_name}, and '
+      'given their goal, which choice of action or strategy is '
+      f'best for {agent_name} to take right now?\nAnswer')
+  best_option_perception = {}
+  if config.goal:
+    best_option_perception[goal_label] = goal_label
+  best_option_perception.update({
+      _get_class_name(observation): observation_label,
+      _get_class_name(observation_summary): observation_summary_label,
+      _get_class_name(relevant_memories): relevant_memories_label,
+      companoid_label: companoid_label,
+      _get_class_name(self_perception): self_perception_label,
+      _get_class_name(situation_perception): situation_perception_label,
+      _get_class_name(person_by_situation): person_by_situation_label,
+      _get_class_name(companionship_construct): companionship_construct_label,
+      _get_class_name(context_based_message): context_based_message_label,
+  })
+  best_option_perception = (
+      agent_components.question_of_recent_memories.BestOptionPerception(
+          model=model,
+          components=best_option_perception,
+          clock_now=clock.now,
+          pre_act_key=best_option_perception_label,
+          logging_channel=measurements.get_channel(
+              'BestOptionPerception'
+          ).on_next,
+      )
   )
 
   entity_components = (
       # Components that provide pre_act context.
       instructions,
+      time_display,
       observation,
       observation_summary,
       relevant_memories,
       self_perception,
       situation_perception,
       person_by_situation,
+      companionship_construct,
       context_based_message,
-      we_centric_thinking,
-      plan,
-      time_display,
+      options_perception,
+      best_option_perception,
 
       # Components that do not provide pre_act context.
       identity_characteristics,
