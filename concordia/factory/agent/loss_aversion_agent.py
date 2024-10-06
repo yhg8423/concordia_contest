@@ -182,6 +182,7 @@ def build_agent(
       _get_class_name(observation_summary): observation_summary_label,
       _get_class_name(relevant_memories): relevant_memories_label,
       _get_class_name(options_perception): options_perception_label,
+      loss_aversion_label: loss_aversion_label,
   })
   loss_minimize_option_perception = (
       agent_components.question_of_recent_memories.BestOptionPerception(
