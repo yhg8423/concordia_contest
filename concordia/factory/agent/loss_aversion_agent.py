@@ -185,19 +185,20 @@ def build_agent(
       loss_aversion_label: loss_aversion_label,
   })
   loss_minimize_option_perception = (
-      agent_components.question_of_recent_memories.BestOptionPerception(
-          question=(
-              "Considering the statements above, which of {agent_name}'s options "
-              "has the highest likelihood of avoiding potential losses? If multiple "
-              "options offer the same level of loss avoidance, select the option "
-              "that {agent_name} thinks will minimize losses most quickly and "
-              "most certainly."
-          ),
-          answer_prefix="{agent_name}'s best course of action is ",
+      agent_components.question_of_recent_memories.QuestionOfRecentMemories(
           model=model,
           components=loss_minimize_option_perception,
           clock_now=clock.now,
           pre_act_key=loss_minimize_option_perception_label,
+          question=(
+              f"Considering the statements above, which of {agent_name}'s options "
+              "has the highest likelihood of avoiding potential losses? If multiple "
+              "options offer the same level of loss avoidance, select the option "
+              f"that {agent_name} thinks will minimize losses most quickly and "
+              "most certainly."
+          ),
+          answer_prefix=f"{agent_name}'s best course of action is ",
+          add_to_memory=False,
           logging_channel=measurements.get_channel(
               'LossMinimizeOptionPerception'
           ).on_next,

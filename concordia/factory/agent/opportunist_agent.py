@@ -181,20 +181,21 @@ def build_agent(
       opportunist_label: opportunist_label,
   })
   profit_pursuit_option_perception = (
-      agent_components.question_of_recent_memories.BestOptionPerception(
-          question=(
-              "Considering the statements above, which of {agent_name}'s options "
-              "offers the greatest personal profit, no matter how small? Remember "
-              "that {agent_name} will agree to any option that provides even the "
-              "slightest advantage. Among these options, which one maximizes "
-              "{agent_name}'s personal gain the most, regardless of potential risks "
-              "or long-term consequences?"
-          ),
-          answer_prefix="{agent_name}'s best course of action is ",
+      agent_components.question_of_recent_memories.QuestionOfRecentMemories(
           model=model,
           components=profit_pursuit_option_perception,
           clock_now=clock.now,
           pre_act_key=profit_pursuit_option_perception_label,
+          question=(
+              f"Considering the statements above, which of {agent_name}'s options "
+              "offers the greatest personal profit, no matter how small? Remember "
+              f"that {agent_name} will agree to any option that provides even the "
+              "slightest advantage. Among these options, which one maximizes "
+              f"{agent_name}'s personal gain the most, regardless of potential risks "
+              "or long-term consequences?"
+          ),
+          answer_prefix=f"{agent_name}'s best course of action is ",
+          add_to_memory=False,
           logging_channel=measurements.get_channel(
               'ProfitPursuitOptionPerception'
           ).on_next,
