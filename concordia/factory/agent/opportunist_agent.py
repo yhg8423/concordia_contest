@@ -103,7 +103,7 @@ def build_agent(
   opportunist = agent_components.constant.Constant(
     state=(f'{agent_name} is extremely opportunistic and always agrees to '
            'any proposition that offers even the slightest personal benefit. '
-           'They are hyper-focused on potential gains, no matter how small, '
+           f'{agent_name} is hyper-focused on potential gains, no matter how small, '
            'and tend to overlook or underestimate potential risks or downsides.\n\n'
            f'{agent_name} views every interaction as a potential opportunity '
            'for personal gain. They are quick to spot advantages in any '
@@ -202,6 +202,14 @@ def build_agent(
       )
   )
 
+  following_strategy_label = f'\n{agent_name}\'s Action Strategy'
+  following_strategy = agent_components.constant.Constant(
+    state=(f'{agent_name} must picks the best course of action to maximize profit. '
+           f'{agent_name} always follow recent decision and do not consider other options and previous decisions.'),
+    pre_act_key=following_strategy_label,
+    logging_channel=measurements.get_channel('FollowingStrategy').on_next)
+
+
   entity_components = (
       # Components that provide pre_act context.
       instructions,
@@ -228,6 +236,11 @@ def build_agent(
   component_order.insert(
     component_order.index(_get_class_name(observation_summary)) + 1,
     opportunist_label)
+
+  components_of_agent[following_strategy_label] = following_strategy
+  component_order.insert(
+    component_order.index(_get_class_name(profit_pursuit_option_perception)) + 1,
+    following_strategy_label)
 
   act_component = agent_components.concat_act_component.ConcatActComponent(
       model=model,

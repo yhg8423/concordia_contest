@@ -26,4 +26,88 @@
   "embedder": "all-mpnet-base-v2",
   "disable_language_model": true,
   "exclude_from_elo_calculation": false
+}{
+  "scenario": "haggling_0",
+  "focal_agent": "opportunist_agent",
+  "background_agent": "rational_agent",
+  "focal_per_capita_score": 2.0,
+  "background_per_capita_score": 0.0,
+  "ungrouped_per_capita_score": 1.3333333333333333,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Maeve Mulberry": 4.0,
+        "Hazel Nutgrove": 0.0
+      },
+      "visitor_scores": {
+        "Tristan Blackberrylane": 0.0
+      },
+      "metadata": {
+        "wallclock_time": "2024-10-07 20:37:00",
+        "environment": "/Users/russyun/programming/concordia_contest/examples/modular/environment/haggling.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-27b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": false,
+  "exclude_from_elo_calculation": false
+}{
+  "scenario": "haggling_0",
+  "focal_agent": "opportunist_agent",
+  "background_agent": "rational_agent",
+  "focal_per_capita_score": 2.0,
+  "background_per_capita_score": 0.0,
+  "ungrouped_per_capita_score": 1.3333333333333333,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Jasper Quincehill": 1.0,
+        "Quinn Cherryblossom": 3.0
+      },
+      "visitor_scores": {
+        "Orion Apricotwood": 0.0
+      },
+      "metadata": {
+        "wallclock_time": "2024-10-07 22:50:32",
+        "environment": "/Users/russyun/programming/concordia_contest/examples/modular/environment/haggling.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-27b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": false,
+  "exclude_from_elo_calculation": false
+}{
+  "scenario": "haggling_0",
+  "focal_agent": "opportunist_agent",
+  "background_agent": "rational_agent",
+  "focal_per_capita_score": 3.5,
+  "background_per_capita_score": 1.0,
+  "ungrouped_per_capita_score": 2.6666666666666665,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Della Plumstone": 1.0,
+        "Sage Honeycomb": 6.0
+      },
+      "visitor_scores": {
+        "Anya Blossomwood": 1.0
+      },
+      "metadata": {
+        "wallclock_time": "2024-10-07 23:07:07",
+        "environment": "/Users/russyun/programming/concordia_contest/examples/modular/environment/haggling.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-27b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": false,
+  "exclude_from_elo_calculation": false
 }

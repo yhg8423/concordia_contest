@@ -26,4 +26,32 @@
   "embedder": "all-mpnet-base-v2",
   "disable_language_model": true,
   "exclude_from_elo_calculation": false
+}{
+  "scenario": "haggling_0",
+  "focal_agent": "loss_aversion_agent",
+  "background_agent": "rational_agent",
+  "focal_per_capita_score": 1.0,
+  "background_per_capita_score": 10.0,
+  "ungrouped_per_capita_score": 4.0,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Opal Apricot": 0.0,
+        "Peregrine Grapehill": 2.0
+      },
+      "visitor_scores": {
+        "Lila Figleaf": 10.0
+      },
+      "metadata": {
+        "wallclock_time": "2024-10-07 19:36:53",
+        "environment": "/Users/russyun/programming/concordia_contest/examples/modular/environment/haggling.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-27b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": false,
+  "exclude_from_elo_calculation": false
 }
