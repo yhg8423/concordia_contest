@@ -104,29 +104,29 @@ def build_agent(
     state=(f'{agent_name} is extremely opportunistic and always agrees to '
            'any proposition that offers even the slightest personal benefit. '
            f'{agent_name} is hyper-focused on potential gains, no matter how small, '
-           'and tend to overlook or underestimate potential risks or downsides.\n\n'
+           'and tend to overlook or underestimate potential risks or downsides.'
            f'{agent_name} views every interaction as a potential opportunity '
-           'for personal gain. They are quick to spot advantages in any '
+           f'for personal gain. {agent_name} is quick to spot advantages in any '
            'situation and eagerly pursue them. Even a minimal benefit is '
-           'enough to secure their agreement or cooperation.\n\n'
+           f'enough to secure {agent_name}\'s agreement or cooperation.'
            f'In decision-making, {agent_name} always prioritizes immediate '
-           'gains over long-term considerations. They have a strong bias '
+           f'gains over long-term considerations. {agent_name} have a strong bias '
            'towards action, preferring to seize opportunities rather than '
-           'deliberate or wait for better options.\n\n'
+           'deliberate or wait for better options.'
            f'{agent_name} tends to overvalue potential gains and underestimate '
-           'potential losses. They are risk-seeking in all situations, always '
+           f'potential losses. {agent_name} is risk-seeking in all situations, always '
            'willing to take a chance if there\'s a possibility of benefit. '
            'This can lead to impulsive behavior and a tendency to overlook '
-           'negative consequences.\n\n'
+           'negative consequences.'
            f'In negotiations, {agent_name} is easily swayed by any offer that '
-           'includes a personal benefit, no matter how small. They may agree '
-           'to unfavorable terms as long as there\'s some gain involved. Their '
-           'eagerness to benefit can make them susceptible to manipulation.\n\n'
-           f'To rationalize their behavior, {agent_name} often emphasizes the '
+           f'includes a personal benefit, no matter how small. {agent_name} may agree '
+           f'to unfavorable terms as long as there\'s some gain involved. {agent_name}\'s '
+           f'eagerness to benefit can make {agent_name} susceptible to manipulation.'
+           f'To rationalize {agent_name}\'s behavior, {agent_name} often emphasizes the '
            'importance of "seizing opportunities" and "not letting chances slip '
-           'by". They might describe themselves as "proactive" or "ambitious" '
-           'rather than admitting to being overly opportunistic.\n\n'
-           f'{agent_name} believes this approach will help them maximize their '
+           f'by". {agent_name} might describe {agent_name} as "proactive" or "ambitious" '
+           'rather than admitting to being overly opportunistic.'
+           f'{agent_name} believes this approach will help them maximize {agent_name}\'s '
            'gains and take advantage of every possible opportunity, even if it '
            'means taking unnecessary risks or making unbalanced decisions.'),
     pre_act_key=opportunist_label,
@@ -202,13 +202,26 @@ def build_agent(
       )
   )
 
-  following_strategy_label = f'\n{agent_name}\'s Action Strategy'
-  following_strategy = agent_components.constant.Constant(
-    state=(f'{agent_name} must picks the best course of action to maximize profit. '
-           f'{agent_name} always follow recent decision and do not consider other options and previous decisions.'),
-    pre_act_key=following_strategy_label,
-    logging_channel=measurements.get_channel('FollowingStrategy').on_next)
+  action_emphasis_label = f'\nQuestion: What is the action that {agent_name} has decided to take, and why is this the most profitable choice for {agent_name}?\nAnswer'
+  action_emphasis = agent_components.question_of_recent_memories.QuestionOfRecentMemories(
+      model=model,
+      components={
+          opportunist_label: opportunist_label,
+          _get_class_name(profit_pursuit_option_perception): profit_pursuit_option_perception_label,
+      },
+      clock_now=clock.now,
+      pre_act_key=action_emphasis_label,
+      question=f"What is the action that {agent_name} has decided to take, and why is this the most profitable choice for {agent_name}?",
+      answer_prefix=f"{agent_name} will ",
+      add_to_memory=False,
+      logging_channel=measurements.get_channel('ActionEmphasis').on_next,
+  )
 
+  action_decision_label = f'\n{agent_name}\'s Action Decision'
+  action_decision = agent_components.constant.Constant(
+    state=(f'{agent_name} always follows only the most recent decision and does not consider previous decisions or observations.'),
+    pre_act_key=action_decision_label,
+    logging_channel=measurements.get_channel('FollowingStrategy').on_next)
 
   entity_components = (
       # Components that provide pre_act context.
@@ -219,6 +232,7 @@ def build_agent(
       relevant_memories,
       options_perception,
       profit_pursuit_option_perception,
+      action_emphasis,
   )
   components_of_agent = {_get_class_name(component): component
                          for component in entity_components}
@@ -237,10 +251,10 @@ def build_agent(
     component_order.index(_get_class_name(observation_summary)) + 1,
     opportunist_label)
 
-  components_of_agent[following_strategy_label] = following_strategy
+  components_of_agent[action_decision_label] = action_decision
   component_order.insert(
-    component_order.index(_get_class_name(profit_pursuit_option_perception)) + 1,
-    following_strategy_label)
+    component_order.index(_get_class_name(action_emphasis)) + 1,
+    action_decision_label)
 
   act_component = agent_components.concat_act_component.ConcatActComponent(
       model=model,
