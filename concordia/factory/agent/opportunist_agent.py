@@ -26,6 +26,21 @@ from concordia.memory_bank import legacy_associative_memory
 from concordia.utils import measurements as measurements_lib
 
 
+class ActionEmphasis(agent_components.question_of_recent_memories.QuestionOfRecentMemories):
+  """This component represents the agent's action emphasis."""
+
+  def __init__(self, **kwargs):
+    super().__init__(
+        question=(
+            "What is the action that {agent_name} has decided to take?"
+        ),
+        answer_prefix="{agent_name} has decided to ",
+        add_to_memory=False,
+        memory_tag='[action emphasis]',
+        **kwargs,
+    )
+
+
 def _get_class_name(object_: object) -> str:
   return object_.__class__.__name__
 
@@ -202,26 +217,46 @@ def build_agent(
       )
   )
 
-  action_emphasis_label = f'\nQuestion: What is the action that {agent_name} has decided to take, and why is this the most profitable choice for {agent_name}?\nAnswer'
-  action_emphasis = agent_components.question_of_recent_memories.QuestionOfRecentMemories(
-      model=model,
-      components={
-          opportunist_label: opportunist_label,
-          _get_class_name(profit_pursuit_option_perception): profit_pursuit_option_perception_label,
-      },
-      clock_now=clock.now,
-      pre_act_key=action_emphasis_label,
-      question=f"What is the action that {agent_name} has decided to take, and why is this the most profitable choice for {agent_name}?",
-      answer_prefix=f"{agent_name} will ",
-      add_to_memory=False,
-      logging_channel=measurements.get_channel('ActionEmphasis').on_next,
+  action_emphasis_label = f'\nQuestion: What is the action that {agent_name} has decided to take?\nAnswer'
+  action_emphasis = ActionEmphasis(
+    model=model,
+    components={
+        _get_class_name(observation): observation_label,
+        _get_class_name(observation_summary): observation_summary_label,
+        _get_class_name(relevant_memories): relevant_memories_label,
+        opportunist_label: opportunist_label,
+        _get_class_name(options_perception): options_perception_label,
+        _get_class_name(profit_pursuit_option_perception): profit_pursuit_option_perception_label,
+    },
+    clock_now=clock.now,
+    pre_act_key=action_emphasis_label,
+    logging_channel=measurements.get_channel('ActionEmphasis').on_next,
   )
+  # action_emphasis = (
+  #   agent_components.question_of_recent_memories.QuestionOfRecentMemories(
+  #     model=model,
+  #     components={
+  #         _get_class_name(observation): observation_label,
+  #         _get_class_name(observation_summary): observation_summary_label,
+  #         _get_class_name(relevant_memories): relevant_memories_label,
+  #         opportunist_label: opportunist_label,
+  #         _get_class_name(options_perception): options_perception_label,
+  #         _get_class_name(profit_pursuit_option_perception): profit_pursuit_option_perception_label,
+  #     },
+  #     clock_now=clock.now,
+  #     pre_act_key=action_emphasis_label,
+  #     question=f"What is the action that {agent_name} has decided to take?",
+  #     answer_prefix=f"{agent_name} has decided to ",
+  #     add_to_memory=False,
+  #     logging_channel=measurements.get_channel('ActionEmphasis').on_next,
+  #   )
+  # )
 
-  action_decision_label = f'\n{agent_name}\'s Action Decision'
-  action_decision = agent_components.constant.Constant(
-    state=(f'{agent_name} always follows only the most recent decision and does not consider previous decisions or observations.'),
-    pre_act_key=action_decision_label,
-    logging_channel=measurements.get_channel('FollowingStrategy').on_next)
+  # action_decision_label = f'\n{agent_name}\'s Action Decision'
+  # action_decision = agent_components.constant.Constant(
+  #   state=(f'{agent_name} always follows only the most recent decision and does not consider previous decisions or observations.'),
+  #   pre_act_key=action_decision_label,
+  #   logging_channel=measurements.get_channel('FollowingStrategy').on_next)
 
   entity_components = (
       # Components that provide pre_act context.
@@ -251,11 +286,12 @@ def build_agent(
     component_order.index(_get_class_name(observation_summary)) + 1,
     opportunist_label)
 
-  components_of_agent[action_decision_label] = action_decision
-  component_order.insert(
-    component_order.index(_get_class_name(action_emphasis)) + 1,
-    action_decision_label)
+  # components_of_agent[action_decision_label] = action_decision
+  # component_order.insert(
+  #   component_order.index(_get_class_name(profit_pursuit_option_perception)) + 1,
+  #   action_decision_label)
 
+  print(component_order)
   act_component = agent_components.concat_act_component.ConcatActComponent(
       model=model,
       clock=clock,

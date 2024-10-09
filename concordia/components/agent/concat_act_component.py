@@ -107,6 +107,7 @@ class ConcatActComponent(entity_component.ActingComponent):
       contexts: entity_component.ComponentContextMapping,
       action_spec: entity_lib.ActionSpec,
   ) -> str:
+    print(contexts)
     prompt = interactive_document.InteractiveDocument(self._model)
     context = self._context_for_action(contexts)
     prompt.statement(context + '\n')
