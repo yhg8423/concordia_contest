@@ -451,8 +451,8 @@ def build_agent(
         f'which option has the highest total score for {agent_name}? '
         f'Calculate the sum of personal benefit and overall wellbeing scores for each option, '
         f'and select the option with the highest total. Provide a brief explanation '
-        f'of your calculation and selection. Please answer in the format `{agent_name} thinks ...` For example,'
-        f"`{agent_name} thinks the best option is [option], because the calculation results are ...`"
+        f'of your calculation and selection. Please answer in the format `{agent_name}\'s best course of action is ...` For example,'
+        f'`{agent_name}\'s best course of action is [option], because the calculation results are ...`'
         '\nAnswer'
     )
     optimal_option_selection = {}
@@ -481,8 +481,8 @@ def build_agent(
                 f"which option has the highest total score for {agent_name}? "
                 f"Calculate the sum of personal benefit and overall wellbeing scores for each option, "
                 f"and select the option with the highest total. Provide a brief explanation "
-                f"of your calculation and selection. Please answer in the format `{agent_name} thinks ...` For example,"
-                f"`{agent_name} thinks the best option is [option], because the calculation results are ...`"
+                f"of your calculation and selection. Please answer in the format `{agent_name}\'s best course of action is ...` For example,"
+                f'`{agent_name}\'s best course of action is [option], because the calculation results are ...`'
             ),
             answer_prefix=f"{agent_name}'s best course of action is ",
             add_to_memory=False,
