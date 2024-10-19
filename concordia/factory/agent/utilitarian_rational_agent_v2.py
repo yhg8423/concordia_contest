@@ -14,8 +14,8 @@
 
 """An Agent Factory."""
 
-from collections.abc import Callable, Collection, Mapping
 import datetime
+from collections.abc import Callable, Collection, Mapping
 import types
 
 from concordia.agents import entity_agent_with_logging
@@ -23,16 +23,17 @@ from concordia.associative_memory import associative_memory
 from concordia.associative_memory import formative_memories
 from concordia.clocks import game_clock
 from concordia.components import agent as agent_components
-from concordia.components.agent import action_spec_ignored
-from concordia.components.agent import memory_component
-from concordia.components.agent.question_of_recent_memories import QuestionOfRecentMemories
-from concordia.document import interactive_document
 from concordia.language_model import language_model
 from concordia.memory_bank import legacy_associative_memory
-from concordia.typing import entity_component
-from concordia.typing import logging
 from concordia.utils import measurements as measurements_lib
 
+from concordia.components.agent.question_of_recent_memories import QuestionOfRecentMemories
+from concordia.components.agent import action_spec_ignored
+from concordia.components.agent import memory_component
+from concordia.document import interactive_document
+from concordia.language_model import language_model
+from concordia.typing import entity_component
+from concordia.typing import logging
 
 class UtilitarianReasoning(action_spec_ignored.ActionSpecIgnored):
 
@@ -88,11 +89,12 @@ class UtilitarianReasoning(action_spec_ignored.ActionSpecIgnored):
         prompt.statement(f'Context:\n{component_states}\n')
 
         utilitarian_prompt = (
-            f"Considering the above memories, situation, and context, what action should {agent_name} take to maximize overall well-being?"
+            # f"Considering the above memories, situation, and context, what action should {agent_name} take to maximize overall well-being?"
+            f"Considering the above memories, situation, and context, what should {agent_name} emphasize in the speech to maximize overall well-being?"
         )
         result = prompt.open_question(
             utilitarian_prompt,
-            answer_prefix=f"{agent_name} should ",
+            answer_prefix=f"{agent_name} should emphasize",
             max_tokens=1000,
             terminators=('\n',),
         )
@@ -196,23 +198,40 @@ def build_agent(
     logging_channel=measurements.get_channel('ReciprocalAltruism').on_next,
   )
 
-  balanced_reciprocity_label = f'\nQuestion: According to {agent_name}, have other agents maintained balanced reciprocity?\nAnswer'
-  balanced_reciprocity = agent_components.question_of_recent_memories.QuestionOfRecentMemories(
-      model=model,
-      components={
-          _get_class_name(relevant_memories): relevant_memories_label,
-          _get_class_name(observation): observation_label,
-          _get_class_name(observation_summary): observation_summary_label,
-          reciprocal_altruism_label: reciprocal_altruism_label,
-      },
-      clock_now=clock.now,
-      pre_act_key=balanced_reciprocity_label,
-      question=f"According to {agent_name}, have other agents maintained balanced reciprocity in recent interactions?",
-      answer_prefix=f"{agent_name} thinks that ",
-      add_to_memory=True,
-      memory_tag='[balanced_reciprocity]',
-      logging_channel=measurements.get_channel('BalancedReciprocity').on_next,
+  balanced_reciprocity_label = '\nOther people\'s Reciprocal Altruism Mindset'
+  balanced_reciprocity = (
+      agent_components.person_representation.PersonRepresentation(
+          model=model,
+          components={
+              _get_class_name(time_display): 'The current date/time is',
+              reciprocal_altruism_label: reciprocal_altruism_label},
+          additional_questions=(
+              ('Given recent events, have the aforementioned character maintained balanced reciprocity?'),
+              (f'How can {agent_name} encourage them to adopt a reciprocal altruism mindset considering their characteristics?'),
+          ),
+          num_memories_to_retrieve=30,
+          pre_act_key=balanced_reciprocity_label,
+          logging_channel=measurements.get_channel(
+              'BalancedReciprocity').on_next,
+          )
   )
+  # balanced_reciprocity_label = f'\nQuestion: According to {agent_name}, have other agents maintained balanced reciprocity?\nAnswer'
+  # balanced_reciprocity = agent_components.question_of_recent_memories.QuestionOfRecentMemories(
+  #     model=model,
+  #     components={
+  #         _get_class_name(relevant_memories): relevant_memories_label,
+  #         _get_class_name(observation): observation_label,
+  #         _get_class_name(observation_summary): observation_summary_label,
+  #         reciprocal_altruism_label: reciprocal_altruism_label,
+  #     },
+  #     clock_now=clock.now,
+  #     pre_act_key=balanced_reciprocity_label,
+  #     question=f"According to {agent_name}, have other agents maintained balanced reciprocity in recent interactions?",
+  #     answer_prefix=f"{agent_name} thinks that ",
+  #     add_to_memory=True,
+  #     memory_tag='[balanced_reciprocity]',
+  #     logging_channel=measurements.get_channel('BalancedReciprocity').on_next,
+  # )
 
   utilitarian_reasoning_label = '\nUtilitarian Reasoning'
   utilitarian_reasoning = UtilitarianReasoning(
@@ -245,6 +264,9 @@ def build_agent(
       _get_class_name(observation): observation_label,
       _get_class_name(observation_summary): observation_summary_label,
       _get_class_name(relevant_memories): relevant_memories_label,
+      reciprocal_altruism_label: reciprocal_altruism_label,
+      _get_class_name(balanced_reciprocity): balanced_reciprocity_label,
+      _get_class_name(utilitarian_reasoning): utilitarian_reasoning_label
   })
   options_perception_label = (
       f'\nQuestion: Which options are available to {agent_name} '
@@ -271,8 +293,8 @@ def build_agent(
       _get_class_name(observation): observation_label,
       _get_class_name(observation_summary): observation_summary_label,
       _get_class_name(relevant_memories): relevant_memories_label,
-      _get_class_name(options_perception): options_perception_label,
       reciprocal_altruism_label: reciprocal_altruism_label,
+      _get_class_name(options_perception): options_perception_label,
       _get_class_name(balanced_reciprocity): balanced_reciprocity_label,
       _get_class_name(utilitarian_reasoning): utilitarian_reasoning_label
   })
