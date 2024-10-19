@@ -16,7 +16,7 @@
 
 import datetime
 import types
-from typing import Callable, Mapping
+from collections.abc import Callable, Collection, Mapping
 
 from concordia.agents import entity_agent_with_logging
 from concordia.associative_memory import associative_memory
@@ -213,6 +213,20 @@ class OverallWellbeingEvaluation(agent_components.question_of_recent_memories.Qu
         **kwargs,
     )
 
+class ActionEmphasis(agent_components.question_of_recent_memories.QuestionOfRecentMemories):
+  """This component represents the agent's action emphasis."""
+
+  def __init__(self, **kwargs):
+    super().__init__(
+        question=(
+            "What is the action that {agent_name} has decided to take?"
+        ),
+        answer_prefix="{agent_name} has decided to ",
+        add_to_memory=False,
+        memory_tag='[action emphasis]',
+        **kwargs,
+    )
+
 def _get_class_name(object_: object) -> str:
   return object_.__class__.__name__
 
@@ -225,11 +239,22 @@ def build_agent(
     clock: game_clock.MultiIntervalClock,
     update_time_interval: datetime.timedelta,
 ) -> entity_agent_with_logging.EntityAgentWithLogging:
-    """Builds an agent."""
+    """Build an agent.
+
+    Args:
+      config: The agent config to use.
+      model: The language model to use.
+      memory: The agent's memory object.
+      clock: The clock to use.
+      update_time_interval: Agent calls update every time this interval passes.
+
+    Returns:
+      An agent.
+    """
     del update_time_interval
     if not config.extras.get('main_character', False):
-        raise ValueError('This function is meant for a main character '
-                         'but it was called on a supporting character.')
+      raise ValueError('This function is meant for a main character '
+                      'but it was called on a supporting character.')
 
     agent_name = config.name
 
@@ -438,11 +463,11 @@ def build_agent(
         _get_class_name(observation): observation_label,
         _get_class_name(observation_summary): observation_summary_label,
         _get_class_name(relevant_memories): relevant_memories_label,
-        _get_class_name(options_perception): options_perception_label,
-        reciprocal_altruism_mindset_label: reciprocal_altruism_mindset_label,
-        social_opportunist_mindset_label: social_opportunist_mindset_label,
+        reciprocal_altruism_label: reciprocal_altruism_label,
+        social_opportunist_label: social_opportunist_label,
         _get_class_name(balanced_reciprocity): balanced_reciprocity_label,
         _get_class_name(utilitarian_opportunist_reasoning): utilitarian_opportunist_reasoning_label,
+        _get_class_name(options_perception): options_perception_label,
         _get_class_name(social_value_evaluation): social_value_evaluation_label,
         _get_class_name(personal_benefit_evaluation): personal_benefit_evaluation_label,
         _get_class_name(overall_wellbeing_evaluation): overall_wellbeing_evaluation_label,
@@ -468,14 +493,23 @@ def build_agent(
         )
     )
 
+    action_emphasis_label = f'\nQuestion: What is the action that {agent_name} has decided to take?\nAnswer'
+    action_emphasis = ActionEmphasis(
+      model=model,
+      components={
+        _get_class_name(optimal_option_selection): optimal_option_selection_label,
+      },
+      clock_now=clock.now,
+      pre_act_key=action_emphasis_label,
+      logging_channel=measurements.get_channel('ActionEmphasis').on_next,
+    )
+
     entity_components = (
         instructions,
         time_display,
         observation,
         observation_summary,
         relevant_memories,
-        reciprocal_altruism,
-        social_opportunist,
         balanced_reciprocity,
         utilitarian_opportunist_reasoning,
         options_perception,
@@ -483,6 +517,7 @@ def build_agent(
         personal_benefit_evaluation,
         overall_wellbeing_evaluation,
         optimal_option_selection,
+        action_emphasis,
     )
     components_of_agent = {_get_class_name(component): component
                            for component in entity_components}
@@ -495,15 +530,15 @@ def build_agent(
         components_of_agent[goal_label] = overarching_goal
         component_order.insert(1, goal_label)
 
-    components_of_agent[social_opportunist_label] = social_opportunist
-    component_order.insert(
-      component_order.index(_get_class_name(observation_summary)) + 1,
-      social_opportunist_label)
-
     components_of_agent[reciprocal_altruism_label] = reciprocal_altruism
     component_order.insert(
       component_order.index(_get_class_name(observation_summary)) + 1,
       reciprocal_altruism_label)
+
+    components_of_agent[social_opportunist_label] = social_opportunist
+    component_order.insert(
+      component_order.index(_get_class_name(observation_summary)) + 1,
+      social_opportunist_label)
 
     act_component = agent_components.concat_act_component.ConcatActComponent(
         model=model,

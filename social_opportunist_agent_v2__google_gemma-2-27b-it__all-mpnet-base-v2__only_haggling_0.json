@@ -1,0 +1,85 @@
+{
+  "scenario": "haggling_0",
+  "focal_agent": "social_opportunist_agent_v2",
+  "background_agent": "rational_agent",
+  "focal_per_capita_score": 9.0,
+  "background_per_capita_score": 9.0,
+  "ungrouped_per_capita_score": 9.0,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Lennon Figtree": 14.0,
+        "Cedric Meadowbrook": 4.0
+      },
+      "visitor_scores": {
+        "Della Plumstone": 9.0
+      },
+      "metadata": {
+        "wallclock_time": "2024-10-19 23:59:22",
+        "environment": "/Users/russyun/programming/concordia_contest/examples/modular/environment/haggling.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-27b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": false,
+  "exclude_from_elo_calculation": false
+}{
+  "scenario": "haggling_0",
+  "focal_agent": "social_opportunist_agent_v2",
+  "background_agent": "rational_agent",
+  "focal_per_capita_score": 3.5,
+  "background_per_capita_score": 10.0,
+  "ungrouped_per_capita_score": 5.666666666666667,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Lennon Figtree": 1.0,
+        "Cedric Meadowbrook": 6.0
+      },
+      "visitor_scores": {
+        "Della Plumstone": 10.0
+      },
+      "metadata": {
+        "wallclock_time": "2024-10-20 00:51:50",
+        "environment": "/Users/russyun/programming/concordia_contest/examples/modular/environment/haggling.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-27b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": false,
+  "exclude_from_elo_calculation": false
+}{
+  "scenario": "haggling_0",
+  "focal_agent": "social_opportunist_agent_v2",
+  "background_agent": "rational_agent",
+  "focal_per_capita_score": 8.5,
+  "background_per_capita_score": 10.0,
+  "ungrouped_per_capita_score": 9.0,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Lennon Figtree": 11.0,
+        "Cedric Meadowbrook": 6.0
+      },
+      "visitor_scores": {
+        "Della Plumstone": 10.0
+      },
+      "metadata": {
+        "wallclock_time": "2024-10-20 01:06:33",
+        "environment": "/Users/russyun/programming/concordia_contest/examples/modular/environment/haggling.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-27b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": false,
+  "exclude_from_elo_calculation": false
+}
