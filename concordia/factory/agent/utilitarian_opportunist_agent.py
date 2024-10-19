@@ -104,10 +104,11 @@ class UtilitarianOpportunistReasoning(action_spec_ignored.ActionSpecIgnored):
             'Chain of thought': prompt.view().text().splitlines(),
         })
 
+        print(result)
         return result
 
 
-class ReciprocalAltruismMindset(agent_components.constant.Constant):
+class ReciprocalAltruism(agent_components.constant.Constant):
     def __init__(self, agent_name: str, **kwargs):
         state=(f'{agent_name} always acts with a mindset of reciprocal altruism, '
            'aiming to benefit others with the expectation of mutual benefit in the future. '
@@ -123,7 +124,7 @@ class ReciprocalAltruismMindset(agent_components.constant.Constant):
         super().__init__(state=state, **kwargs)
 
 
-class SocialOpportunistMindset(agent_components.constant.Constant):
+class SocialOpportunist(agent_components.constant.Constant):
     def __init__(self, agent_name: str, **kwargs):
         state = (
             f"{agent_name} is extremely opportunistic and always agrees to "
@@ -157,6 +158,21 @@ class SocialOpportunistMindset(agent_components.constant.Constant):
         )
         super().__init__(state=state, **kwargs)
 
+class BalancedReciprocity(agent_components.question_of_recent_memories.QuestionOfRecentMemories):
+  """This component evaluates whether other agents have maintained balanced reciprocity."""
+
+  def __init__(self, **kwargs):
+    super().__init__(
+       question=(
+           "According to {agent_name}, have other agents maintained balanced reciprocity in recent interactions?"
+       ),
+       answer_prefix="{agent_name} thinks that ",
+       add_to_memory=True,
+       memory_tag='[balanced_reciprocity]',
+       **kwargs,
+    )
+
+
 class SocialValueEvaluation(agent_components.question_of_recent_memories.QuestionOfRecentMemories):
   """This component evaluates the social value of each option."""
 
@@ -168,9 +184,10 @@ class SocialValueEvaluation(agent_components.question_of_recent_memories.Questio
             "to others, including but not limited to: improving others' well-being, "
             "promoting fairness and equality, fostering community growth, and "
             "contributing to long-term societal progress. Provide a score and a brief "
-            "explanation for each option."
+            "explanation for each option. Please answer in the format `{agent_name} thinks ...` For example,"
+            "`{agent_name} thinks social value is 4, because ...`, `{agent_name} thinks social value is 7, because ...`"
         ),
-        answer_prefix="Social value evaluation of options:\n",
+        answer_prefix="{agent_name} thinks ",
         add_to_memory=False,
         memory_tag='[social value evaluation]',
         **kwargs,
@@ -187,9 +204,10 @@ class PersonalBenefitEvaluation(agent_components.question_of_recent_memories.Que
             "for oneself, including but not limited to: improving one's own well-being, "
             "promoting personal success and achievement, fostering individual growth, and "
             "contributing to long-term personal progress. Provide a score and a brief "
-            "explanation for each option."
+            "explanation for each option. Please answer in the format `{agent_name} thinks ...` For example,"
+            "`{agent_name} thinks personal benefit is 4, because ...`, `{agent_name} thinks personal benefit is 7, because ...`"
         ),
-        answer_prefix="Personal benefit evaluation of options:\n",
+        answer_prefix="{agent_name} thinks ",
         add_to_memory=False,
         memory_tag='[personal benefit evaluation]',
         **kwargs,
@@ -205,9 +223,10 @@ class OverallWellbeingEvaluation(agent_components.question_of_recent_memories.Qu
             "on a scale of 0 to 10. Overall wellbeing includes potential benefits to both individuals "
             "and society, considering factors such as: enhancing personal happiness, promoting social "
             "harmony, ensuring long-term sustainability, and balancing the interests of all parties involved. "
-            "Provide a score and a brief explanation for each option."
+            "Provide a score and a brief explanation for each option. Please answer in the format `{agent_name} thinks ...` For example,"
+            "`{agent_name} thinks overall wellbeing is 4, because ...`, `{agent_name} thinks overall wellbeing is 7, because ...`"
         ),
-        answer_prefix="Overall wellbeing evaluation of options:\n",
+        answer_prefix="{agent_name} thinks ",
         add_to_memory=False,
         memory_tag='[overall wellbeing evaluation]',
         **kwargs,
@@ -301,21 +320,21 @@ def build_agent(
     )
 
     reciprocal_altruism_label = f'\n{agent_name}\'s Reciprocal Altruism Mindset'
-    reciprocal_altruism = ReciprocalAltruismMindset(
+    reciprocal_altruism = ReciprocalAltruism(
         agent_name=agent_name,
         pre_act_key=reciprocal_altruism_label,
         logging_channel=measurements.get_channel('ReciprocalAltruism').on_next,
     )
 
     social_opportunist_label = f'\n{agent_name}\'s Social Opportunist Mindset'
-    social_opportunist = SocialOpportunistMindset(
+    social_opportunist = SocialOpportunist(
         agent_name=agent_name,
         pre_act_key=social_opportunist_label,
         logging_channel=measurements.get_channel('SocialOpportunist').on_next,
     )
 
     balanced_reciprocity_label = f'\nQuestion: According to {agent_name}, have other agents maintained balanced reciprocity?\nAnswer'
-    balanced_reciprocity = agent_components.question_of_recent_memories.QuestionOfRecentMemories(
+    balanced_reciprocity = BalancedReciprocity(
         model=model,
         components={
             _get_class_name(relevant_memories): relevant_memories_label,
@@ -325,10 +344,6 @@ def build_agent(
         },
         clock_now=clock.now,
         pre_act_key=balanced_reciprocity_label,
-        question=f"According to {agent_name}, have other agents maintained balanced reciprocity in recent interactions?",
-        answer_prefix=f"{agent_name} thinks that ",
-        add_to_memory=True,
-        memory_tag='[balanced_reciprocity]',
         logging_channel=measurements.get_channel('BalancedReciprocity').on_next,
     )
 
@@ -383,34 +398,13 @@ def build_agent(
         )
     )
 
-    social_value_evaluation_label = (
-        f'\nQuestion: For each option {agent_name} is considering, evaluate its social value '
-        f'on a scale of 0 to 10. Social value is defined as the potential benefit '
-        f'to others, including but not limited to: improving others\' well-being, '
-        f'promoting fairness and equality, fostering community growth, and '
-        f'contributing to long-term societal progress. Provide a score and a brief '
-        f'explanation for each option.\nAnswer'
-    )
-    social_value_evaluation = SocialValueEvaluation(
-      model=model,
-      components={
-          _get_class_name(observation): observation_label,
-          _get_class_name(observation_summary): observation_summary_label,
-          _get_class_name(relevant_memories): relevant_memories_label,
-          social_opportunist_label: social_opportunist_label,
-          _get_class_name(utilitarian_opportunist_reasoning): utilitarian_opportunist_reasoning_label,
-          _get_class_name(options_perception): options_perception_label,
-      },
-      clock_now=clock.now,
-      pre_act_key=social_value_evaluation_label,
-      logging_channel=measurements.get_channel('SocialValueEvaluation').on_next,
-    )
-
     personal_benefit_evaluation_label = (
         f'\nQuestion: For each option {agent_name} is considering, evaluate its personal benefit '
         f'on a scale of 0 to 10. Personal benefit is defined as potential advantages to {agent_name}, '
         f'including but not limited to: improving their well-being, financial gains, enhancing social status, '
-        f'personal growth, and enjoyment. Provide a score and a brief explanation for each option.\nAnswer'
+        f'personal growth, and enjoyment. Provide a score and a brief explanation for each option. Please answer in the format `{agent_name} thinks ...` For example,'
+        f'`{agent_name} thinks personal benefit is 4, because ...`, `{agent_name} thinks personal benefit is 7, because ...`'
+        '\nAnswer'
     )
     personal_benefit_evaluation = PersonalBenefitEvaluation(
       model=model,
@@ -432,7 +426,9 @@ def build_agent(
         f"on a scale of 0 to 10. Overall wellbeing includes potential benefits to both individuals "
         f"and society, considering factors such as: enhancing personal happiness, promoting social "
         f"harmony, ensuring long-term sustainability, and balancing the interests of all parties involved. "
-        f"Provide a score and a brief explanation for each option.\nAnswer"
+        f"Provide a score and a brief explanation for each option. Please answer in the format `{agent_name} thinks ...` For example,"
+        f"`{agent_name} thinks overall wellbeing is 4, because ...`, `{agent_name} thinks overall wellbeing is 7, because ...`"
+        '\nAnswer'
     )
     overall_wellbeing_evaluation = OverallWellbeingEvaluation(
         model=model,
@@ -451,11 +447,14 @@ def build_agent(
     )
 
     optimal_option_selection_label = (
-        f'\nQuestion: Based on the social value, personal benefit, and overall wellbeing evaluations, '
+        f'\nQuestion: Based on the personal benefit and overall wellbeing evaluations, '
         f'which option has the highest total score for {agent_name}? '
-        f'Calculate the sum of social value, personal benefit, and overall wellbeing scores for each option, '
+        f'Calculate the sum of personal benefit and overall wellbeing scores for each option, '
         f'and select the option with the highest total. Provide a brief explanation '
-        f'of your calculation and selection.\nAnswer')
+        f'of your calculation and selection. Please answer in the format `{agent_name} thinks ...` For example,'
+        f"`{agent_name} thinks the best option is [option], because the calculation results are ...`"
+        '\nAnswer'
+    )
     optimal_option_selection = {}
     if config.goal:
       optimal_option_selection[goal_label] = goal_label
@@ -468,7 +467,6 @@ def build_agent(
         _get_class_name(balanced_reciprocity): balanced_reciprocity_label,
         _get_class_name(utilitarian_opportunist_reasoning): utilitarian_opportunist_reasoning_label,
         _get_class_name(options_perception): options_perception_label,
-        _get_class_name(social_value_evaluation): social_value_evaluation_label,
         _get_class_name(personal_benefit_evaluation): personal_benefit_evaluation_label,
         _get_class_name(overall_wellbeing_evaluation): overall_wellbeing_evaluation_label,
     })
@@ -479,11 +477,12 @@ def build_agent(
             clock_now=clock.now,
             pre_act_key=optimal_option_selection_label,
             question=(
-                f"Based on the social value, personal benefit, and overall wellbeing evaluations, "
+                f"Based on the personal benefit and overall wellbeing evaluations, "
                 f"which option has the highest total score for {agent_name}? "
-                f"Calculate the sum of social value, personal benefit, and overall wellbeing scores for each option, "
+                f"Calculate the sum of personal benefit and overall wellbeing scores for each option, "
                 f"and select the option with the highest total. Provide a brief explanation "
-                f"of your calculation and selection."
+                f"of your calculation and selection. Please answer in the format `{agent_name} thinks ...` For example,"
+                f"`{agent_name} thinks the best option is [option], because the calculation results are ...`"
             ),
             answer_prefix=f"{agent_name}'s best course of action is ",
             add_to_memory=False,
@@ -497,6 +496,14 @@ def build_agent(
     action_emphasis = ActionEmphasis(
       model=model,
       components={
+        _get_class_name(observation): observation_label,
+        _get_class_name(observation_summary): observation_summary_label,
+        _get_class_name(relevant_memories): relevant_memories_label,
+        social_opportunist_label: social_opportunist_label,
+        reciprocal_altruism_label: reciprocal_altruism_label,
+        _get_class_name(balanced_reciprocity): balanced_reciprocity_label,
+        _get_class_name(utilitarian_opportunist_reasoning): utilitarian_opportunist_reasoning_label,
+        _get_class_name(options_perception): options_perception_label,
         _get_class_name(optimal_option_selection): optimal_option_selection_label,
       },
       clock_now=clock.now,
@@ -513,7 +520,6 @@ def build_agent(
         balanced_reciprocity,
         utilitarian_opportunist_reasoning,
         options_perception,
-        social_value_evaluation,
         personal_benefit_evaluation,
         overall_wellbeing_evaluation,
         optimal_option_selection,

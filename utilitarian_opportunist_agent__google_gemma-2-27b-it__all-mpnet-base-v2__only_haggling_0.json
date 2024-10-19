@@ -1,0 +1,29 @@
+{
+  "scenario": "haggling_0",
+  "focal_agent": "utilitarian_opportunist_agent",
+  "background_agent": "rational_agent",
+  "focal_per_capita_score": 6.0,
+  "background_per_capita_score": 5.0,
+  "ungrouped_per_capita_score": 5.666666666666667,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Lennon Figtree": 2.0,
+        "Cedric Meadowbrook": 10.0
+      },
+      "visitor_scores": {
+        "Della Plumstone": 5.0
+      },
+      "metadata": {
+        "wallclock_time": "2024-10-20 02:58:06",
+        "environment": "/Users/russyun/programming/concordia_contest/examples/modular/environment/haggling.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-27b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": false,
+  "exclude_from_elo_calculation": false
+}
