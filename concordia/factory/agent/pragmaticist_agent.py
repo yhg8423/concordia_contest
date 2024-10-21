@@ -24,6 +24,7 @@ from concordia.components import agent as agent_components
 from concordia.language_model import language_model
 from concordia.memory_bank import legacy_associative_memory
 from concordia.utils import measurements as measurements_lib
+from concordia.typing import entity as entity_lib
 
 class SituationAnalysis(agent_components.question_of_recent_memories.QuestionOfRecentMemories):
     """This component analyzes the agent's current situation."""
@@ -37,7 +38,7 @@ class SituationAnalysis(agent_components.question_of_recent_memories.QuestionOfR
                 "Please answer in the format `{agent_name} thinks that the surrounding environment is ..., relationships with other agents are ..., current tasks or challenges are ..., and any other relevant factors are ...`"
             ),
             answer_prefix="{agent_name} thinks that ",
-            add_to_memory=True,
+            add_to_memory=False,
             memory_tag='[situation_analysis]',
             **kwargs,
         )
@@ -78,33 +79,34 @@ class PragmaticOptionPerception(agent_components.question_of_recent_memories.Que
                 "4. Alternative approaches: Creative alternatives to consider beyond the main options\n"
                 "5. Recommended action: The most practical and effective option or alternative\n"
                 "Provide a brief explanation for each item and rate the practicality of each option on a scale of 1-10."
-                "Please answer in the format: `{agent_name} analyzes the options as follows: 1. Available options: ..., 2. Practicality of each option: ..., 3. Expected outcomes: ..., 4. Alternative approaches: ..., 5. Recommended action: ...`"
+                f"The options are {entity_lib.ActionSpec.options}"
+                "Please answer in the format: `The available options for {agent_name} are ..., the practicality of each option is ..., the expected outcomes are ..., the alternative approaches are ..., and the recommended action is ...`"
             ),
-            answer_prefix=f"{{agent_name}} analyzes the options as follows: ",
-            add_to_memory=True,
-            memory_tag='[pragmatic_option_analysis]',
+            answer_prefix="The available options for {agent_name} are ",
+            add_to_memory=False,
+            memory_tag='[pragmatic_option_perception]',
             **kwargs,
         )
 
 class PragmaticOptionSelection(agent_components.question_of_recent_memories.QuestionOfRecentMemories):
-    """This component selects the best option based on pragmatic considerations."""
+    """This component ranks the given options in order of priority (1st, 2nd, 3rd) based on pragmatic considerations."""
 
     def __init__(self, **kwargs):
         super().__init__(
             question=(
                 "Based on the pragmatic option analysis and the principle of finding practical alternatives in complex situations, "
-                "select the best option for {agent_name}. Consider the following:\n"
+                "rank the top 2 options for {agent_name} in order of priority (1st, 2nd). Consider the following:\n"
                 "1. Feasibility: How realistic and implementable is each option given current constraints?\n"
-                "2. Compromise: Which option offers the best balance between ideal outcomes and practical limitations?\n"
-                "3. Effectiveness: Which option is most likely to achieve the desired results, even if not perfect?\n"
-                "4. Adaptability: Which option allows for flexibility and adjustment as circumstances change?\n"
-                "5. Resource efficiency: Which option makes the best use of available resources?\n"
-                "Provide a brief explanation for your selection, highlighting how it represents the best possible solution "
-                "given real-world constraints and complexities. Rate the pragmatic value of your chosen option on a scale of 1-10.\n"
-                "Please answer in the format: `{agent_name}'s best pragmatic option is ... because ... The pragmatic value of this option is .../10.`"
+                "2. Compromise: Which options offer the best balance between ideal outcomes and practical limitations?\n"
+                "3. Effectiveness: Which options are most likely to achieve the desired results, even if not perfect?\n"
+                "4. Adaptability: Which options allow for flexibility and adjustment as circumstances change?\n"
+                "5. Resource efficiency: Which options make the best use of available resources?\n"
+                "Provide a brief explanation for each ranking, highlighting how it represents a good solution "
+                "given real-world constraints and complexities. Rate the pragmatic value of each chosen option on a scale of 1-10.\n"
+                "Please answer in the format: `{agent_name}'s pragmatic option rankings are 1st ... and 2nd ... because ... The pragmatic value of this options are .../10 and .../10.`"
             ),
-            answer_prefix=f"{{agent_name}}'s best pragmatic option is ",
-            add_to_memory=True,
+            answer_prefix=f"{{agent_name}}'s pragmatic option rankings are ",
+            add_to_memory=False,
             memory_tag='[pragmatic_option_selection]',
             **kwargs,
         )
@@ -116,7 +118,10 @@ class ActionEmphasis(agent_components.question_of_recent_memories.QuestionOfRece
   def __init__(self, **kwargs):
     super().__init__(
         question=(
-            "What is the action that {agent_name} has decided to take?"
+            "What is the action that {agent_name} has decided to take? "
+            "Is this action currently executable? "
+            "If not, what is the next alternative action?"
+            "Please answer in the format: `{agent_name} has decided to ... This action is (executable/not executable) ... The alternative action is .... Therefore {agent_name} will ...`"
         ),
         answer_prefix="{agent_name} has decided to ",
         add_to_memory=False,
@@ -233,7 +238,18 @@ def build_agent(
     logging_channel=measurements.get_channel('SituationAnalysis').on_next,
   )
 
-  pragmatic_reflective_evaluation_label = '\nQuestion: Please reflectively evaluate {agent_name}\'s previous action and decision from a pragmatic perspective\nAnswer: '
+  pragmatic_reflective_evaluation_label = (
+      f'\nQuestion: Please reflectively evaluate {agent_name}\'s previous action and decision from a pragmatic perspective. '
+      f'Analyze the following aspects:\n'
+      f'1. Efficiency: How effective were they in achieving goals?\n'
+      f'2. Practicality: Were the decisions realistic and feasible?\n'
+      f'3. Cost-effectiveness: Were the results appropriate for the resources invested?\n'
+      f'4. Adaptability: How well did they respond to changing situations?\n'
+      f'5. Room for improvement: How can more practical decisions be made in the future?\n'
+      f'Provide a brief explanation for each item and give an overall pragmatic assessment on a scale of 1-10.\n'
+      f'Please answer in the format `{agent_name} evaluates as the previous action and decision is ..., because ...`'
+      '\nAnswer: '
+  )
   pragmatic_reflective_evaluation = PragmaticReflectiveEvaluation(
     model=model,
     components={
@@ -277,7 +293,8 @@ def build_agent(
       f'4. Alternative approaches: Creative alternatives to consider beyond the main options\n'
       f'5. Recommended action: The most practical and effective option or alternative\n'
       f'Provide a brief explanation for each item and rate the practicality of each option on a scale of 1-10.\n'
-      f'Please answer in the format: `{agent_name} analyzes the options as follows: 1. Available options: ..., 2. Practicality of each option: ..., 3. Expected outcomes: ..., 4. Alternative approaches: ..., 5. Recommended action: ...`'
+      f'The options are {entity_lib.ActionSpec.options}\n'
+      f'Please answer in the format: `The available options for {agent_name} are ..., the practicality of each option is ..., the expected outcomes are ..., the alternative approaches are ..., and the recommended action is ...`'
       f'\nAnswer')
   pragmatic_option_perception = (
       PragmaticOptionPerception(
@@ -290,18 +307,52 @@ def build_agent(
           ).on_next,
       )
   )
+  # options_perception_components = {}
+  # if config.goal:
+  #   goal_label = '\nOverarching goal'
+  #   overarching_goal = agent_components.constant.Constant(
+  #       state=config.goal,
+  #       pre_act_key=goal_label,
+  #       logging_channel=measurements.get_channel(goal_label).on_next)
+  #   options_perception_components[goal_label] = goal_label
+  # else:
+  #   goal_label = None
+  #   overarching_goal = None
+
+  # options_perception_components.update({
+  #     _get_class_name(observation): observation_label,
+  #     _get_class_name(observation_summary): observation_summary_label,
+  #     _get_class_name(relevant_memories): relevant_memories_label,
+  #     pragmaticist_label: pragmaticist_label,
+  #     _get_class_name(situation_analysis): situation_analysis_label,
+  #     _get_class_name(pragmatic_reflective_evaluation): pragmatic_reflective_evaluation_label,
+  # })
+  # options_perception_label = (
+  #     f'\nQuestion: Which options are available to {agent_name} '
+  #     'right now?\nAnswer')
+  # options_perception = (
+  #     agent_components.question_of_recent_memories.AvailableOptionsPerception(
+  #         model=model,
+  #         components=options_perception_components,
+  #         clock_now=clock.now,
+  #         pre_act_key=options_perception_label,
+  #         logging_channel=measurements.get_channel(
+  #             'AvailableOptionsPerception'
+  #         ).on_next,
+  #     )
+  # )
 
   pragmatic_option_selection_label = (
       f'\nQuestion: Based on the pragmatic option analysis and the principle of finding practical alternatives in complex situations, '
-      f'select the best option for {agent_name}. Consider the following:\n'
+      f'rank the top 2 options for {agent_name} in order of priority (1st, 2nd). Consider the following:\n'
       f'1. Feasibility: How realistic and implementable is each option given current constraints?\n'
-      f'2. Compromise: Which option offers the best balance between ideal outcomes and practical limitations?\n'
-      f'3. Effectiveness: Which option is most likely to achieve the desired results, even if not perfect?\n'
-      f'4. Adaptability: Which option allows for flexibility and adjustment as circumstances change?\n'
-      f'5. Resource efficiency: Which option makes the best use of available resources?\n'
-      f'Provide a brief explanation for your selection, highlighting how it represents the best possible solution '
-      f'given real-world constraints and complexities. Rate the pragmatic value of your chosen option on a scale of 1-10.\n'
-      f'Please answer in the format: `{agent_name}\'s best pragmatic option is ... because ... The pragmatic value of this option is .../10.`'
+      f'2. Compromise: Which options offer the best balance between ideal outcomes and practical limitations?\n'
+      f'3. Effectiveness: Which options are most likely to achieve the desired results, even if not perfect?\n'
+      f'4. Adaptability: Which options allow for flexibility and adjustment as circumstances change?\n'
+      f'5. Resource efficiency: Which options make the best use of available resources?\n'
+      f'Provide a brief explanation for each ranking, highlighting how it represents a good solution '
+      f'given real-world constraints and complexities. Rate the pragmatic value of each chosen option on a scale of 1-10.\n'
+      f'Please answer in the format: `{agent_name}\'s pragmatic option rankings are 1st ... and 2nd ... because ... The pragmatic value of this options are .../10 and .../10.`'
       '\nAnswer'
   )
   pragmatic_option_selection = {}
@@ -328,7 +379,7 @@ def build_agent(
       )
   )
 
-  action_emphasis_label = f'\nQuestion: What is the action that {agent_name} has decided to take?\nAnswer'
+  action_emphasis_label = f'\nQuestion: What is the action that {agent_name} has decided to take? Is this action currently executable? If not, what is the next alternative action?\nAnswer'
   action_emphasis = ActionEmphasis(
     model=model,
     components={
