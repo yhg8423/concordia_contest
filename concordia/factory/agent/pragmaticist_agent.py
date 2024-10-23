@@ -357,7 +357,15 @@ def build_agent(
   )
   pragmatic_option_selection = {}
   if config.goal:
+    goal_label = '\nOverarching goal'
+    overarching_goal = agent_components.constant.Constant(
+        state=config.goal,
+        pre_act_key=goal_label,
+        logging_channel=measurements.get_channel(goal_label).on_next)
     pragmatic_option_selection[goal_label] = goal_label
+  else:
+    goal_label = None
+    overarching_goal = None
   pragmatic_option_selection.update({
       _get_class_name(observation): observation_label,
       _get_class_name(observation_summary): observation_summary_label,
