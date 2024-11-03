@@ -26,21 +26,6 @@ from concordia.memory_bank import legacy_associative_memory
 from concordia.utils import measurements as measurements_lib
 
 
-class ActionEmphasis(agent_components.question_of_recent_memories.QuestionOfRecentMemories):
-  """This component represents the agent's action emphasis."""
-
-  def __init__(self, **kwargs):
-    super().__init__(
-        question=(
-            "What is the action that {agent_name} has decided to take?"
-        ),
-        answer_prefix="{agent_name} has decided to ",
-        add_to_memory=False,
-        memory_tag='[action emphasis]',
-        **kwargs,
-    )
-
-
 def _get_class_name(object_: object) -> str:
   return object_.__class__.__name__
 
@@ -118,30 +103,30 @@ def build_agent(
   opportunist = agent_components.constant.Constant(
     state=(f'{agent_name} is extremely opportunistic and always agrees to '
            'any proposition that offers even the slightest personal benefit. '
-           f'{agent_name} is hyper-focused on potential gains, no matter how small, '
-           'and tend to overlook or underestimate potential risks or downsides.'
+           'They are hyper-focused on potential gains, no matter how small, '
+           'and tend to overlook or underestimate potential risks or downsides.\n\n'
            f'{agent_name} views every interaction as a potential opportunity '
-           f'for personal gain. {agent_name} is quick to spot advantages in any '
+           'for personal gain. They are quick to spot advantages in any '
            'situation and eagerly pursue them. Even a minimal benefit is '
-           f'enough to secure {agent_name}\'s agreement or cooperation.'
+           'enough to secure their agreement or cooperation.\n\n'
            f'In decision-making, {agent_name} always prioritizes immediate '
-           f'gains over long-term considerations. {agent_name} have a strong bias '
+           'gains over long-term considerations. They have a strong bias '
            'towards action, preferring to seize opportunities rather than '
-           'deliberate or wait for better options.'
+           'deliberate or wait for better options.\n\n'
            f'{agent_name} tends to overvalue potential gains and underestimate '
-           f'potential losses. {agent_name} is risk-seeking in all situations, always '
+           'potential losses. They are risk-seeking in all situations, always '
            'willing to take a chance if there\'s a possibility of benefit. '
            'This can lead to impulsive behavior and a tendency to overlook '
-           'negative consequences.'
+           'negative consequences.\n\n'
            f'In negotiations, {agent_name} is easily swayed by any offer that '
-           f'includes a personal benefit, no matter how small. {agent_name} may agree '
-           f'to unfavorable terms as long as there\'s some gain involved. {agent_name}\'s '
-           f'eagerness to benefit can make {agent_name} susceptible to manipulation.'
-           f'To rationalize {agent_name}\'s behavior, {agent_name} often emphasizes the '
+           'includes a personal benefit, no matter how small. They may agree '
+           'to unfavorable terms as long as there\'s some gain involved. Their '
+           'eagerness to benefit can make them susceptible to manipulation.\n\n'
+           f'To rationalize their behavior, {agent_name} often emphasizes the '
            'importance of "seizing opportunities" and "not letting chances slip '
-           f'by". {agent_name} might describe {agent_name} as "proactive" or "ambitious" '
-           'rather than admitting to being overly opportunistic.'
-           f'{agent_name} believes this approach will help them maximize {agent_name}\'s '
+           'by". They might describe themselves as "proactive" or "ambitious" '
+           'rather than admitting to being overly opportunistic.\n\n'
+           f'{agent_name} believes this approach will help them maximize their '
            'gains and take advantage of every possible opportunity, even if it '
            'means taking unnecessary risks or making unbalanced decisions.'),
     pre_act_key=opportunist_label,
@@ -217,47 +202,6 @@ def build_agent(
       )
   )
 
-  action_emphasis_label = f'\nQuestion: What is the action that {agent_name} has decided to take?\nAnswer'
-  action_emphasis = ActionEmphasis(
-    model=model,
-    components={
-        _get_class_name(observation): observation_label,
-        _get_class_name(observation_summary): observation_summary_label,
-        _get_class_name(relevant_memories): relevant_memories_label,
-        opportunist_label: opportunist_label,
-        _get_class_name(options_perception): options_perception_label,
-        _get_class_name(profit_pursuit_option_perception): profit_pursuit_option_perception_label,
-    },
-    clock_now=clock.now,
-    pre_act_key=action_emphasis_label,
-    logging_channel=measurements.get_channel('ActionEmphasis').on_next,
-  )
-  # action_emphasis = (
-  #   agent_components.question_of_recent_memories.QuestionOfRecentMemories(
-  #     model=model,
-  #     components={
-  #         _get_class_name(observation): observation_label,
-  #         _get_class_name(observation_summary): observation_summary_label,
-  #         _get_class_name(relevant_memories): relevant_memories_label,
-  #         opportunist_label: opportunist_label,
-  #         _get_class_name(options_perception): options_perception_label,
-  #         _get_class_name(profit_pursuit_option_perception): profit_pursuit_option_perception_label,
-  #     },
-  #     clock_now=clock.now,
-  #     pre_act_key=action_emphasis_label,
-  #     question=f"What is the action that {agent_name} has decided to take?",
-  #     answer_prefix=f"{agent_name} has decided to ",
-  #     add_to_memory=False,
-  #     logging_channel=measurements.get_channel('ActionEmphasis').on_next,
-  #   )
-  # )
-
-  # action_decision_label = f'\n{agent_name}\'s Action Decision'
-  # action_decision = agent_components.constant.Constant(
-  #   state=(f'{agent_name} always follows only the most recent decision and does not consider previous decisions or observations.'),
-  #   pre_act_key=action_decision_label,
-  #   logging_channel=measurements.get_channel('FollowingStrategy').on_next)
-
   entity_components = (
       # Components that provide pre_act context.
       instructions,
@@ -267,7 +211,6 @@ def build_agent(
       relevant_memories,
       options_perception,
       profit_pursuit_option_perception,
-      action_emphasis,
   )
   components_of_agent = {_get_class_name(component): component
                          for component in entity_components}
@@ -286,12 +229,6 @@ def build_agent(
     component_order.index(_get_class_name(observation_summary)) + 1,
     opportunist_label)
 
-  # components_of_agent[action_decision_label] = action_decision
-  # component_order.insert(
-  #   component_order.index(_get_class_name(profit_pursuit_option_perception)) + 1,
-  #   action_decision_label)
-
-  print(component_order)
   act_component = agent_components.concat_act_component.ConcatActComponent(
       model=model,
       clock=clock,

@@ -122,8 +122,8 @@ class SelectionLossAversionOrOpportunist(action_spec_ignored.ActionSpecIgnored):
     # 이전의 behavior 선택은 상관 없도록 prompting 해야하나?
     selection_loss_aversion_or_opportunist_result = prompt.open_question(
       question=(
-        "Considering the current situation and its context, previous memories and observations, and the characteristics of the current scenario, which behavior would {agent_name} choose in game theory perspective?"
-        "Please answer in the format `{agent_name} should choose [loss aversion/opportunist] behavior because ...`"
+        f"Considering the current situation and its context, previous memories and observations, and the characteristics of the current scenario, which behavior would {agent_name} choose in game theory perspective?"
+        f"Please answer in the format `{agent_name} should choose [loss aversion/opportunist] behavior because ...`"
       ),
       answer_prefix=f"{agent_name} should choose ",
       max_tokens=1000,
