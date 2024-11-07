@@ -48,7 +48,7 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
       components: Mapping[entity_component.ComponentName, str] = types.MappingProxyType({}),
       clock_now: Callable[[], datetime.datetime] | None = None,
       num_memories_to_retrieve: int = 25,
-      pre_act_key: str = 'Utilitarian Reasoning',
+      pre_act_key: str = 'Loss Evaluation',
       logging_channel: logging.LoggingChannel = logging.NoOpLoggingChannel,
   ):
     super().__init__(pre_act_key)
