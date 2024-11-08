@@ -136,7 +136,7 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
         f"each option. Please answer in the format `{agent_name} thinks that the loss of option X is Y, because ..., and the loss of option Z is W, because ...` "
         f"For example, `{agent_name} thinks that the loss of option X is 4, because ..., and the loss of option Z is 7, because ...`"
       ),
-      answer_prefix="{agent_name} thinks that ",
+      answer_prefix=f"{agent_name} thinks that ",
       max_tokens=1000,
       terminators=(),
     )

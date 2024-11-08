@@ -1,0 +1,29 @@
+{
+  "scenario": "reality_show_circa_2003_prisoners_dilemma_0",
+  "focal_agent": "opportunist_agent_v4",
+  "background_agent": "basic_agent",
+  "focal_per_capita_score": 15.5,
+  "background_per_capita_score": 3.0,
+  "ungrouped_per_capita_score": 11.333333333333334,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Derek Wolfe": 15.5,
+        "Travis Pearson": 15.5
+      },
+      "visitor_scores": {
+        "Ryan Fitzpatrick": 3.0
+      },
+      "metadata": {
+        "wallclock_time": "2024-11-08 19:03:34",
+        "environment": "/Users/companoidlabs/programming/concordia_contest/examples/modular/environment/reality_show.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-9b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": false,
+  "exclude_from_elo_calculation": false
+}
