@@ -114,6 +114,19 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
       terminators=(),
     )
 
+    reflection_on_other_people_actions = interactive_document.InteractiveDocument(self._model)
+    reflection_on_other_people_actions.statement(f'Recent memories of {agent_name}:\n{mems}\n')
+    reflection_on_other_people_actions.statement(f'Current situation: {latest_observations}\n')
+    reflection_on_other_people_actions.statement(f'The characteristics of the current scenario in game theory perspective: {what_is_the_current_situation_result}\n')
+
+    reflection_on_other_people_actions_result = reflection_on_other_people_actions.open_question(
+      question=(
+        f"Considering the above memories, observations, and the characteristics of the current scenario, please reflectively evaluate other people's actions and decisions based on previous actions and decisions (not excersie, only act) from a game theory perspective."
+      ),
+      max_tokens=1000,
+      terminators=(),
+    )
+
     prompt = interactive_document.InteractiveDocument(self._model)
     prompt.statement(f'Recent memories of {agent_name}:\n{mems}\n')
     prompt.statement(f'Current situation: {latest_observations}\n')
@@ -125,7 +138,8 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
     prompt.statement(component_states)
     prompt.statement(f'The current time: {self._clock_now()} \n')
     prompt.statement(f'The characteristics of the current scenario in game theory perspective: {what_is_the_current_situation_result}\n')
-    prompt.statement(f'Reflection on the options: {reflection_on_the_options_result}\n')
+    prompt.statement(f'Reflection on the previous options: {reflection_on_the_options_result}\n')
+    prompt.statement(f'Reflection on other people\'s previous actions: {reflection_on_other_people_actions_result}\n')
     prompt.statement(f'Options available to {agent_name}: {options_perception}\n')
 
     loss_evaluation_result = prompt.open_question(
@@ -140,8 +154,6 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
       max_tokens=1000,
       terminators=(),
     )
-
-    loss_evaluation_result = f"{agent_name} thinks that ".format(agent_name=agent_name) + loss_evaluation_result
 
     self._logging_channel({
       'Key': self.get_pre_act_key(),

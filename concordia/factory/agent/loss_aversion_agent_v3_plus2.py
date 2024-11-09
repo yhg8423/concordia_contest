@@ -42,16 +42,18 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
   def __init__(
       self,
       model: language_model.LanguageModel,
+      observation_component_name: str,
       options_perception_component_name: str,
       memory_component_name: str = agent_components.memory_component.DEFAULT_MEMORY_COMPONENT_NAME,
       components: Mapping[entity_component.ComponentName, str] = types.MappingProxyType({}),
       clock_now: Callable[[], datetime.datetime] | None = None,
       num_memories_to_retrieve: int = 25,
-      pre_act_key: str = 'Utilitarian Reasoning',
+      pre_act_key: str = 'Loss Evaluation',
       logging_channel: logging.LoggingChannel = logging.NoOpLoggingChannel,
   ):
     super().__init__(pre_act_key)
     self._model = model
+    self._observation_component_name = observation_component_name
     self._options_perception_component_name = options_perception_component_name
     self._memory_component_name = memory_component_name
     self._components = dict(components)
@@ -61,6 +63,12 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
 
   def _make_pre_act_value(self) -> str:
     agent_name = self.get_entity().name
+
+    observation_component = self.get_entity().get_component(
+      self._observation_component_name,
+      type_=agent_components.observation.Observation
+    )
+    latest_observations = observation_component.get_pre_act_value()
 
     memory = self.get_entity().get_component(
       self._memory_component_name,
@@ -81,7 +89,8 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
     options_perception = options_perception_component.get_pre_act_value()
 
     what_is_the_current_situation = interactive_document.InteractiveDocument(self._model)
-    what_is_the_current_situation.statement(f'Recent observations of {agent_name}:\n{mems}\n')
+    what_is_the_current_situation.statement(f'Recent memories of {agent_name}:\n{mems}\n')
+    what_is_the_current_situation.statement(f'Current situation: {latest_observations}\n')
 
     what_is_the_current_situation_result = what_is_the_current_situation.open_question(
       question=(
@@ -91,8 +100,23 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
       terminators=(),
     )
 
+    reflection_on_the_options = interactive_document.InteractiveDocument(self._model)
+    reflection_on_the_options.statement(f'Recent memories of {agent_name}:\n{mems}\n')
+    reflection_on_the_options.statement(f'Current situation: {latest_observations}\n')
+    reflection_on_the_options.statement(f'The characteristics of the current scenario in game theory perspective: {what_is_the_current_situation_result}\n')
+    reflection_on_the_options.statement(f'Options available to {agent_name}: {options_perception}\n')
+
+    reflection_on_the_options_result = reflection_on_the_options.open_question(
+      question=(
+        f"Considering the above memories, observations, and the characteristics of the current scenario, please reflectively evaluate {agent_name}'s options based on previous actions and decisions (not excersie, only act) from a loss aversion perspective and game theory perspective."
+      ),
+      max_tokens=1000,
+      terminators=(),
+    )
+
     prompt = interactive_document.InteractiveDocument(self._model)
-    prompt.statement(f'Recent observations of {agent_name}:\n{mems}\n')
+    prompt.statement(f'Recent memories of {agent_name}:\n{mems}\n')
+    prompt.statement(f'Current situation: {latest_observations}\n')
 
     component_states = '\n'.join([
       f"{agent_name}'s {prefix}:\n{self.get_named_component_pre_act_value(key)}"
@@ -101,6 +125,7 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
     prompt.statement(component_states)
     prompt.statement(f'The current time: {self._clock_now()} \n')
     prompt.statement(f'The characteristics of the current scenario in game theory perspective: {what_is_the_current_situation_result}\n')
+    prompt.statement(f'Reflection on the options: {reflection_on_the_options_result}\n')
     prompt.statement(f'Options available to {agent_name}: {options_perception}\n')
 
     loss_evaluation_result = prompt.open_question(
@@ -111,10 +136,12 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
         f"each option. Please answer in the format `{agent_name} thinks that the loss of option X is Y, because ..., and the loss of option Z is W, because ...` "
         f"For example, `{agent_name} thinks that the loss of option X is 4, because ..., and the loss of option Z is 7, because ...`"
       ),
-      answer_prefix="{agent_name} thinks that ",
+      answer_prefix=f"{agent_name} thinks that ",
       max_tokens=1000,
       terminators=(),
     )
+
+    loss_evaluation_result = f"{agent_name} thinks that ".format(agent_name=agent_name) + loss_evaluation_result
 
     self._logging_channel({
       'Key': self.get_pre_act_key(),
@@ -279,6 +306,7 @@ def build_agent(
 
   loss_evaluation = LossEvaluation(
     model=model,
+    observation_component_name=_get_class_name(observation),
     options_perception_component_name=_get_class_name(options_perception),
     components={
       _get_class_name(observation): observation_label,

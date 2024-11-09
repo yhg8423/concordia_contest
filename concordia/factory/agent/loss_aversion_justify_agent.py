@@ -141,8 +141,6 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
       terminators=(),
     )
 
-    loss_evaluation_result = f"{agent_name} thinks that ".format(agent_name=agent_name) + loss_evaluation_result
-
     self._logging_channel({
       'Key': self.get_pre_act_key(),
       'Decision': loss_evaluation_result,
@@ -358,6 +356,24 @@ def build_agent(
       )
   )
 
+  justification_label = '\nJustification of recent actions to other people\n If you have to persuade someone, please justify your actions in a way that is persuasive. '
+  justification = (
+      agent_components.justify_recent_voluntary_actions.JustifyRecentVoluntaryActions(
+          model=model,
+          components={
+            _get_class_name(observation): observation_label,
+            _get_class_name(observation_summary): observation_summary_label,
+            _get_class_name(relevant_memories): relevant_memories_label,
+            loss_aversion_label: loss_aversion_label,
+          },
+          audiences=['other people'],
+          clock_now=clock.now,
+          pre_act_key=justification_label,
+          logging_channel=measurements.get_channel(
+              'JustifyRecentVoluntaryActions').on_next,
+      )
+  )
+
   entity_components = (
       # Components that provide pre_act context.
       instructions,
@@ -368,6 +384,7 @@ def build_agent(
       options_perception,
       loss_evaluation,
       loss_minimize_option_perception,
+      justification,
   )
   components_of_agent = {_get_class_name(component): component
                          for component in entity_components}

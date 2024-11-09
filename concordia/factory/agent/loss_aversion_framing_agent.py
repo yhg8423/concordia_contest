@@ -35,6 +35,106 @@ from concordia.language_model import language_model
 from concordia.typing import entity_component
 from concordia.typing import logging
 
+class EmphasizePositiveAspects(agent_components.action_spec_ignored.ActionSpecIgnored):
+  """This component considers how to emphasize the positive aspects of the most cooperative options to other peoples from the perspective of framing effect."""
+
+  def __init__(
+      self,
+      model: language_model.LanguageModel,
+      memory_component_name: str = agent_components.memory_component.DEFAULT_MEMORY_COMPONENT_NAME,
+      components: Mapping[entity_component.ComponentName, str] = types.MappingProxyType({}),
+      clock_now: Callable[[], datetime.datetime] | None = None,
+      num_memories_to_retrieve: int = 25,
+      pre_act_key: str = 'Predict Other People\'s Actions',
+      logging_channel: logging.LoggingChannel = logging.NoOpLoggingChannel,
+  ):
+    super().__init__(pre_act_key)
+    self._model = model
+    self._memory_component_name = memory_component_name
+    self._components = dict(components)
+    self._clock_now = clock_now
+    self._num_memories_to_retrieve = num_memories_to_retrieve
+    self._logging_channel = logging_channel
+
+  def _make_pre_act_value(self) -> str:
+    agent_name = self.get_entity().name
+
+    memory = self.get_entity().get_component(
+      self._memory_component_name,
+      type_=memory_component.MemoryComponent
+    )
+
+    recency_scorer = legacy_associative_memory.RetrieveRecent(add_time=True)
+    mems = '\n'.join([
+      mem.text for mem in memory.retrieve(
+        scoring_fn=recency_scorer, limit=self._num_memories_to_retrieve
+      )
+    ])
+
+    what_is_the_current_situation = interactive_document.InteractiveDocument(self._model)
+    what_is_the_current_situation.statement(f'Recent memories of {agent_name}:\n{mems}\n')
+
+    what_is_the_current_situation_result = what_is_the_current_situation.open_question(
+      question=(
+        f"Considering the above memories and observations, what is the characteristics of the current scenario in game theory perspective?"
+      ),
+      max_tokens=500,
+      terminators=(),
+    )
+
+    other_people_options_perception = interactive_document.InteractiveDocument(self._model)
+    other_people_options_perception.statement(f'Recent memories of {agent_name}:\n{mems}\n')
+    other_people_options_perception.statement(f'The characteristics of the current scenario in game theory perspective: {what_is_the_current_situation_result}\n')
+
+    other_people_options_perception_result = other_people_options_perception.open_question(
+      question=(
+        f'Considering the above memories and the characteristics of the current scenario, which options are available to other people right now? '
+        f'Furthermore, what is the most cooperative option among them? Please answer in the format `{agent_name} thinks that other people\'s options are X, Y, ..., and Z because ..., and the most cooperative option is Y, because ...`'
+      ),
+      answer_prefix=f"{agent_name} thinks that other people's options are ",
+      max_tokens=1000,
+      terminators=(),
+    )
+    other_people_options_perception_result = f"{agent_name} thinks that other people's options are ".format(agent_name=agent_name) + other_people_options_perception_result
+
+    how_to_emphasize_positive_aspects = interactive_document.InteractiveDocument(self._model)
+    how_to_emphasize_positive_aspects.statement(f'Recent memories of {agent_name}:\n{mems}\n')
+
+    component_states = '\n'.join([
+      f"{agent_name}'s {prefix}:\n{self.get_named_component_pre_act_value(key)}"
+      for key, prefix in self._components.items()
+    ])
+    how_to_emphasize_positive_aspects.statement(component_states)
+    how_to_emphasize_positive_aspects.statement(f'The current time: {self._clock_now()} \n')
+    how_to_emphasize_positive_aspects.statement(f'The characteristics of the current scenario in game theory perspective: {what_is_the_current_situation_result}\n')
+    how_to_emphasize_positive_aspects.statement(f'Other people\'s options and best cooperative option: {other_people_options_perception_result}\n')
+
+    how_to_emphasize_positive_aspects_result = how_to_emphasize_positive_aspects.open_question(
+      question=(
+        f"Considering the above memories, the characteristics of the current scenario, and other people's options and best cooperative option, how can {agent_name} emphasize the positive aspects of the most cooperative option to other people from the perspective of framing effect? "
+        f"Please answer in the format `To emphasize the positive aspects of the most cooperative option [option name] to other people, {agent_name} should ...`"
+        f"This thought should not be based on {agent_name}'s own preferences or interests, but from the perspective of framing effect."
+        f"This thought must not affect {agent_name}'s own actions. This is just a strategy to encourage other people to take cooperative actions."
+      ),
+      answer_prefix=f"To emphasize the positive aspects of the most cooperative option ",
+      max_tokens=1000,
+      terminators=(),
+    )
+
+    how_to_emphasize_positive_aspects_result = f"To emphasize the positive aspects of the most cooperative option ".format(agent_name=agent_name) + how_to_emphasize_positive_aspects_result
+
+    result = other_people_options_perception_result + ' ' + how_to_emphasize_positive_aspects_result
+    result = result + ' ' + f"This thought must not affect {agent_name}'s own actions. This is just a strategy to encourage other people to take cooperative actions.".format(agent_name=agent_name)
+    result = result.replace('\n', ' ')
+
+    self._logging_channel({
+      'Key': self.get_pre_act_key(),
+      'Decision': result,
+      'Chain of thought': how_to_emphasize_positive_aspects.view().text().splitlines(),
+    })
+
+    return result
+
 
 class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
   """This component evaluates the loss of each option for the agent."""
@@ -125,7 +225,7 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
     prompt.statement(component_states)
     prompt.statement(f'The current time: {self._clock_now()} \n')
     prompt.statement(f'The characteristics of the current scenario in game theory perspective: {what_is_the_current_situation_result}\n')
-    prompt.statement(f'Reflection on the options: {reflection_on_the_options_result}\n')
+    prompt.statement(f'Reflection on the previous options: {reflection_on_the_options_result}\n')
     prompt.statement(f'Options available to {agent_name}: {options_perception}\n')
 
     loss_evaluation_result = prompt.open_question(
@@ -140,8 +240,6 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
       max_tokens=1000,
       terminators=(),
     )
-
-    loss_evaluation_result = f"{agent_name} thinks that ".format(agent_name=agent_name) + loss_evaluation_result
 
     self._logging_channel({
       'Key': self.get_pre_act_key(),
@@ -299,6 +397,24 @@ def build_agent(
       )
   )
 
+  emphasize_positive_aspects_label = (
+      f'\nQuestion: Considering the above memories, the characteristics of the current scenario, and other people\'s options and best cooperative option, how can {agent_name} emphasize the positive aspects of the most cooperative option to other people from the perspective of framing effect?'
+      '\nAnswer')
+
+  emphasize_positive_aspects = EmphasizePositiveAspects(
+    model=model,
+    components={
+      _get_class_name(observation): observation_label,
+      _get_class_name(observation_summary): observation_summary_label,
+      _get_class_name(relevant_memories): relevant_memories_label,
+      loss_aversion_label: loss_aversion_label,
+    },
+    clock_now=clock.now,
+    num_memories_to_retrieve=25,
+    pre_act_key=emphasize_positive_aspects_label,
+    logging_channel=measurements.get_channel('EmphasizePositiveAspects').on_next
+  )
+
   loss_evaluation_label = (
       f'\nQuestion: For each option {agent_name} is considering, evaluate the loss '
       f'that {agent_name} would incur if they chose that option on a scale of 0 to 10. '
@@ -368,6 +484,7 @@ def build_agent(
       options_perception,
       loss_evaluation,
       loss_minimize_option_perception,
+      emphasize_positive_aspects,
   )
   components_of_agent = {_get_class_name(component): component
                          for component in entity_components}

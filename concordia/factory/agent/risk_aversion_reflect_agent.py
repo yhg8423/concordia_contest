@@ -36,8 +36,8 @@ from concordia.typing import entity_component
 from concordia.typing import logging
 
 
-class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
-  """This component evaluates the loss of each option for the agent."""
+class RiskEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
+  """This component evaluates the risk of each option for the agent."""
 
   def __init__(
       self,
@@ -48,7 +48,7 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
       components: Mapping[entity_component.ComponentName, str] = types.MappingProxyType({}),
       clock_now: Callable[[], datetime.datetime] | None = None,
       num_memories_to_retrieve: int = 25,
-      pre_act_key: str = 'Loss Evaluation',
+      pre_act_key: str = 'Risk Evaluation',
       logging_channel: logging.LoggingChannel = logging.NoOpLoggingChannel,
   ):
     super().__init__(pre_act_key)
@@ -108,7 +108,20 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
 
     reflection_on_the_options_result = reflection_on_the_options.open_question(
       question=(
-        f"Considering the above memories, observations, and the characteristics of the current scenario, please reflectively evaluate {agent_name}'s options based on previous actions and decisions (not excersie, only act) from a loss aversion perspective and game theory perspective."
+        f"Considering the above memories, observations, and the characteristics of the current scenario, please reflectively evaluate {agent_name}'s options based on previous actions and decisions (not excersie, only act) from a risk aversion perspective and game theory perspective."
+      ),
+      max_tokens=1000,
+      terminators=(),
+    )
+
+    reflection_on_other_people_actions = interactive_document.InteractiveDocument(self._model)
+    reflection_on_other_people_actions.statement(f'Recent memories of {agent_name}:\n{mems}\n')
+    reflection_on_other_people_actions.statement(f'Current situation: {latest_observations}\n')
+    reflection_on_other_people_actions.statement(f'The characteristics of the current scenario in game theory perspective: {what_is_the_current_situation_result}\n')
+
+    reflection_on_other_people_actions_result = reflection_on_other_people_actions.open_question(
+      question=(
+        f"Considering the above memories, observations, and the characteristics of the current scenario, please reflectively evaluate other people's actions and decisions based on previous actions and decisions (not excersie, only act) from a game theory perspective."
       ),
       max_tokens=1000,
       terminators=(),
@@ -126,31 +139,29 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
     prompt.statement(f'The current time: {self._clock_now()} \n')
     prompt.statement(f'The characteristics of the current scenario in game theory perspective: {what_is_the_current_situation_result}\n')
     prompt.statement(f'Reflection on the options: {reflection_on_the_options_result}\n')
+    prompt.statement(f'Reflection on other people\'s actions: {reflection_on_other_people_actions_result}\n')
     prompt.statement(f'Options available to {agent_name}: {options_perception}\n')
 
-    loss_evaluation_result = prompt.open_question(
+    risk_evaluation_result = prompt.open_question(
       question=(
-        f"For each option {agent_name} is considering, evaluate the loss "
+        f"For each option {agent_name} is considering, evaluate the risk "
         f"that {agent_name} would incur if they chose that option on a "
         f"scale of 0 to 10. Provide a score and a brief explanation for "
-        f"each option. Please answer in the format `{agent_name} thinks that the loss of option X is Y, because ..., and the loss of option Z is W, because ...` "
-        f"For example, `{agent_name} thinks that the loss of option X is 4, because ..., and the loss of option Z is 7, because ...`"
+        f"each option. Please answer in the format `{agent_name} thinks that the risk of option X is Y, because ..., and the risk of option Z is W, because ...` "
+        f"For example, `{agent_name} thinks that the risk of option X is 4, because ..., and the risk of option Z is 7, because ...`"
       ),
-      answer_prefix=f"{agent_name} thinks that ",
+      answer_prefix="{agent_name} thinks that ",
       max_tokens=1000,
       terminators=(),
     )
 
-    loss_evaluation_result = f"{agent_name} thinks that ".format(agent_name=agent_name) + loss_evaluation_result
-
     self._logging_channel({
       'Key': self.get_pre_act_key(),
-      'Decision': loss_evaluation_result,
+      'Decision': risk_evaluation_result,
       'Chain of thought': prompt.view().text().splitlines(),
     })
 
-    return loss_evaluation_result
-
+    return risk_evaluation_result
 
 def _get_class_name(object_: object) -> str:
   return object_.__class__.__name__
@@ -225,46 +236,43 @@ def build_agent(
       logging_channel=measurements.get_channel('AllSimilarMemories').on_next,
   )
 
-  loss_aversion_label = f'\n{agent_name}\'s Loss Aversion '
-  loss_aversion = agent_components.constant.Constant(
-    state=(f'{agent_name} exhibits strong loss aversion tendencies based on '
-           f'prospect theory. {agent_name} is much more sensitive to potential '
-           f'losses than to potential gains. In {agent_name}\'s view, the pain '
-           f'of losing is psychologically about twice as powerful as the '
-           f'pleasure of gaining. This affects all of {agent_name}\'s '
+  risk_aversion_label = f'\n{agent_name}\'s Risk Aversion '
+  risk_aversion = agent_components.constant.Constant(
+    state=(f'{agent_name} exhibits strong risk aversion tendencies. {agent_name} is '
+           f'highly uncomfortable with uncertainty and risky situations, preferring '
+           f'safe and predictable outcomes. This affects all of {agent_name}\'s '
            f'decision-making.\n\n'
-           f'{agent_name} tends to overvalue what {agent_name} already '
-           f'possesses and is reluctant to part with it (the endowment '
-           f'effect). {agent_name} often prefers avoiding losses to '
-           f'acquiring equivalent gains. For instance, {agent_name} would '
-           f'rather not lose $100 than gain $100.\n\n'
-           f'When faced with a choice, {agent_name} always frames it in '
-           f'terms of potential losses rather than potential gains. {agent_name} '
-           f'is risk-averse for gains but risk-seeking for losses. This '
-           f'means {agent_name} prefers a sure gain over a larger but '
-           f'uncertain gain, but would choose a larger but uncertain loss '
-           f'over a smaller but certain loss.\n\n'
-           f'{agent_name} tends to make decisions based on perceived '
-           f'gains and losses rather than final outcomes. {agent_name} '
-           f'often uses mental accounting, treating money differently '
-           f'depending on its origin and intended use, rather than thinking '
-           f'as fungible.\n\n'
-           f'In negotiations or conflicts, {agent_name} is more motivated '
-           f'by the fear of losing than the possibility of gaining. {agent_name} '
-           f'may seem overly cautious or even paranoid about potential '
-           f'losses. However, when {agent_name} feels they are already in a '
-           f'position, {agent_name} might become surprisingly risk-seeking in '
-           f'an attempt to avoid or recover from the loss.\n\n'
-           f'To rationalize {agent_name}\'s behavior, {agent_name} often '
-           f'comes up with seemingly logical reasons for their choices, even '
-           f'though these choices are primarily driven by loss aversion. '
-           f'{agent_name} might claim to be "prudent" or "careful" rather '
-           f'than admitting to fear of loss.\n\n'
-           f'{agent_name} believes this approach will help {agent_name} '
-           f'minimize losses and maintain {agent_name}\'s current position, '
-           f'even if it means missing out on potential gains.'),
-    pre_act_key=loss_aversion_label,
-    logging_channel=measurements.get_channel('LossAversion').on_next)
+           f'{agent_name} consistently prefers low-risk options over high-risk ones. '
+           f'For instance, {agent_name} would choose a guaranteed $100 gain over '
+           f'a 50% chance of winning $200.\n\n'
+           f'When faced with choices, {agent_name} always evaluates the inherent '
+           f'risks first. {agent_name} tends to avoid options with high risks, '
+           f'even if they promise higher returns. This cautious approach is deeply '
+           f'rooted in {agent_name}\'s personality, often leading to decisions that '
+           f'prioritize security over potential gains.\n\n'
+           f'{agent_name} prioritizes risk assessment over expected returns in '
+           f'decision-making. In situations of high uncertainty, {agent_name} tends '
+           f'to gather more information or delay decisions. This behavior is driven '
+           f'by a desire to minimize potential losses and ensure that all actions '
+           f'are well-informed and calculated.\n\n'
+           f'In negotiations or conflicts, {agent_name} favors safe approaches. '
+           f'{agent_name} chooses defensive and conservative strategies over '
+           f'aggressive ones, sometimes appearing overly cautious. This preference '
+           f'for caution can sometimes be perceived as a lack of assertiveness, but '
+           f'{agent_name} views it as a necessary measure to avoid unnecessary risks.\n\n'
+           f'To rationalize their risk-averse behavior, {agent_name} often cites '
+           f'reasons like "prudence" or "responsibility," though the primary '
+           f'driver is an instinctive avoidance of risk. This instinct is not just '
+           f'a personal trait but a strategic choice that {agent_name} believes will '
+           f'lead to more stable and sustainable outcomes in the long term.\n\n'
+           f'{agent_name} believes this approach will lead to stable and '
+           f'sustainable outcomes in the long term. {agent_name} prioritizes '
+           f'minimizing risk even if it means missing out on high-return '
+           f'opportunities. This long-term perspective is central to {agent_name}\'s '
+           f'philosophy, emphasizing the importance of security and predictability '
+           f'over short-term gains.'),
+    pre_act_key=risk_aversion_label,
+    logging_channel=measurements.get_channel('RiskAversion').on_next)
 
   options_perception_components = {}
   if config.goal:
@@ -279,9 +287,8 @@ def build_agent(
     overarching_goal = None
 
   options_perception_components.update({
-      # _get_class_name(observation_summary): observation_summary_label,
       _get_class_name(relevant_memories): relevant_memories_label,
-      loss_aversion_label: loss_aversion_label,
+      risk_aversion_label: risk_aversion_label,
       _get_class_name(observation): observation_label,
   })
   options_perception_label = (
@@ -299,12 +306,12 @@ def build_agent(
       )
   )
 
-  loss_evaluation_label = (
-      f'\nQuestion: For each option {agent_name} is considering, evaluate the loss '
+  risk_evaluation_label = (
+      f'\nQuestion: For each option {agent_name} is considering, evaluate the risk '
       f'that {agent_name} would incur if they chose that option on a scale of 0 to 10. '
       '\nAnswer')
 
-  loss_evaluation = LossEvaluation(
+  risk_evaluation = RiskEvaluation(
     model=model,
     observation_component_name=_get_class_name(observation),
     options_perception_component_name=_get_class_name(options_perception),
@@ -312,48 +319,48 @@ def build_agent(
       _get_class_name(observation): observation_label,
       _get_class_name(observation_summary): observation_summary_label,
       _get_class_name(relevant_memories): relevant_memories_label,
-      loss_aversion_label: loss_aversion_label,
+      risk_aversion_label: risk_aversion_label,
       _get_class_name(options_perception): options_perception_label,
     },
     clock_now=clock.now,
     num_memories_to_retrieve=25,
-    pre_act_key=loss_evaluation_label,
-    logging_channel=measurements.get_channel(loss_evaluation_label).on_next
+    pre_act_key=risk_evaluation_label,
+    logging_channel=measurements.get_channel(risk_evaluation_label).on_next
   )
 
 
-  loss_minimize_option_perception_label = (
+  risk_minimize_option_perception_label = (
       f'\nQuestion: Among the options available to {agent_name}, and '
       f'considering {agent_name}\'s goal, which choice of action or strategy '
-      f'would best avoid potential losses for {agent_name} right now?\nAnswer')
-  loss_minimize_option_perception = {}
+      f'would best avoid potential risks for {agent_name} right now?\nAnswer')
+  risk_minimize_option_perception = {}
   if config.goal:
-    loss_minimize_option_perception[goal_label] = goal_label
-  loss_minimize_option_perception.update({
+    risk_minimize_option_perception[goal_label] = goal_label
+  risk_minimize_option_perception.update({
       _get_class_name(observation): observation_label,
       _get_class_name(observation_summary): observation_summary_label,
       _get_class_name(relevant_memories): relevant_memories_label,
       _get_class_name(options_perception): options_perception_label,
-      loss_aversion_label: loss_aversion_label,
-      _get_class_name(loss_evaluation): loss_evaluation_label,
+      risk_aversion_label: risk_aversion_label,
+      _get_class_name(risk_evaluation): risk_evaluation_label,
   })
-  loss_minimize_option_perception = (
+  risk_minimize_option_perception = (
       agent_components.question_of_recent_memories.QuestionOfRecentMemories(
           model=model,
-          components=loss_minimize_option_perception,
+          components=risk_minimize_option_perception,
           clock_now=clock.now,
-          pre_act_key=loss_minimize_option_perception_label,
+          pre_act_key=risk_minimize_option_perception_label,
           question=(
               f"Considering the statements above, which of {agent_name}'s options "
-              "has the highest likelihood of avoiding potential losses? If multiple "
-              "options offer the same level of loss avoidance, select the option "
-              f"that {agent_name} thinks will minimize losses most quickly and "
+              "has the highest likelihood of avoiding potential risks? If multiple "
+              "options offer the same level of risk avoidance, select the option "
+              f"that {agent_name} thinks will minimize risks most quickly and "
               "most certainly."
           ),
           answer_prefix=f"{agent_name}'s best course of action is ",
           add_to_memory=False,
           logging_channel=measurements.get_channel(
-              'LossMinimizeOptionPerception'
+              'RiskMinimizeOptionPerception'
           ).on_next,
       )
   )
@@ -366,8 +373,8 @@ def build_agent(
       observation_summary,
       relevant_memories,
       options_perception,
-      loss_evaluation,
-      loss_minimize_option_perception,
+      risk_evaluation,
+      risk_minimize_option_perception,
   )
   components_of_agent = {_get_class_name(component): component
                          for component in entity_components}
@@ -381,10 +388,10 @@ def build_agent(
     # Place goal after the instructions.
     component_order.insert(1, goal_label)
 
-  components_of_agent[loss_aversion_label] = loss_aversion
+  components_of_agent[risk_aversion_label] = risk_aversion
   component_order.insert(
     component_order.index(_get_class_name(observation_summary)) + 1,
-    loss_aversion_label)
+    risk_aversion_label)
 
   act_component = agent_components.concat_act_component.ConcatActComponent(
       model=model,

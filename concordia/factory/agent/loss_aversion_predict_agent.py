@@ -35,6 +35,103 @@ from concordia.language_model import language_model
 from concordia.typing import entity_component
 from concordia.typing import logging
 
+class PredictOtherPeopleActions(agent_components.action_spec_ignored.ActionSpecIgnored):
+  """This component predicts other people's actions."""
+
+  def __init__(
+      self,
+      model: language_model.LanguageModel,
+      memory_component_name: str = agent_components.memory_component.DEFAULT_MEMORY_COMPONENT_NAME,
+      components: Mapping[entity_component.ComponentName, str] = types.MappingProxyType({}),
+      clock_now: Callable[[], datetime.datetime] | None = None,
+      num_memories_to_retrieve: int = 25,
+      pre_act_key: str = 'Predict Other People\'s Actions',
+      logging_channel: logging.LoggingChannel = logging.NoOpLoggingChannel,
+  ):
+    super().__init__(pre_act_key)
+    self._model = model
+    self._memory_component_name = memory_component_name
+    self._components = dict(components)
+    self._clock_now = clock_now
+    self._num_memories_to_retrieve = num_memories_to_retrieve
+    self._logging_channel = logging_channel
+
+  def _make_pre_act_value(self) -> str:
+    agent_name = self.get_entity().name
+
+    memory = self.get_entity().get_component(
+      self._memory_component_name,
+      type_=memory_component.MemoryComponent
+    )
+
+    recency_scorer = legacy_associative_memory.RetrieveRecent(add_time=True)
+    mems = '\n'.join([
+      mem.text for mem in memory.retrieve(
+        scoring_fn=recency_scorer, limit=self._num_memories_to_retrieve
+      )
+    ])
+
+    what_is_the_current_situation = interactive_document.InteractiveDocument(self._model)
+    what_is_the_current_situation.statement(f'Recent memories of {agent_name}:\n{mems}\n')
+
+    what_is_the_current_situation_result = what_is_the_current_situation.open_question(
+      question=(
+        f"Considering the above memories and observations, what is the characteristics of the current scenario in game theory perspective?"
+      ),
+      max_tokens=500,
+      terminators=(),
+    )
+
+    thought_about_other_people_tendencies = interactive_document.InteractiveDocument(self._model)
+    thought_about_other_people_tendencies.statement(f'Recent memories of {agent_name}:\n{mems}\n')
+    thought_about_other_people_tendencies.statement(f'The characteristics of the current scenario in game theory perspective: {what_is_the_current_situation_result}\n')
+
+    thought_about_other_people_tendencies_result = thought_about_other_people_tendencies.open_question(
+      question=(
+        f"Considering the above memories and the characteristics of the current scenario, please predict other people's tendencies based on previous actions and decisions."
+        f"Please answer in the format `{agent_name} thinks that [name of people #1] tendency is X, because ..., [name of people #2] tendency is Y, because ...`"
+        f"For example, `{agent_name} thinks that [name of people #1] tendency is to ..., because ..., [name of people #2] tendency is to ..., because ...`"
+      ),
+      answer_prefix=f"{agent_name} thinks that ",
+      max_tokens=1000,
+      terminators=(),
+    )
+
+    thought_about_other_people_tendencies_result = f"{agent_name} thinks that ".format(agent_name=agent_name) + thought_about_other_people_tendencies_result
+
+    prompt = interactive_document.InteractiveDocument(self._model)
+    prompt.statement(f'Recent memories of {agent_name}:\n{mems}\n')
+
+    component_states = '\n'.join([
+      f"{agent_name}'s {prefix}:\n{self.get_named_component_pre_act_value(key)}"
+      for key, prefix in self._components.items()
+    ])
+    prompt.statement(component_states)
+    prompt.statement(f'The current time: {self._clock_now()} \n')
+    prompt.statement(f'The characteristics of the current scenario in game theory perspective: {what_is_the_current_situation_result}\n')
+    prompt.statement(f'{agent_name}\'s Thought about other people\'s tendencies: {thought_about_other_people_tendencies_result}\n')
+
+    predict_other_people_actions_result = prompt.open_question(
+      question=(
+        f"Considering the above memories, the characteristics of the current scenario, and {agent_name}'s thought about other people's tendencies, please predict other people's actions."
+        f"Please answer in the format `{agent_name} predicts that [name of people #1] will do X, because ..., [name of people #2] will do Y, because ...`"
+        f"For example, `{agent_name} predicts that [name of people #1] will do ..., because ..., [name of people #2] will do ..., because ...`"
+      ),
+      answer_prefix=f"{agent_name} predicts that ",
+      max_tokens=1000,
+      terminators=(),
+    )
+
+    predict_other_people_actions_result = f"{agent_name} predicts that ".format(agent_name=agent_name) + predict_other_people_actions_result
+
+    self._logging_channel({
+      'Key': self.get_pre_act_key(),
+      'Decision': predict_other_people_actions_result,
+      'Chain of thought': prompt.view().text().splitlines(),
+    })
+
+    return predict_other_people_actions_result
+
 
 class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
   """This component evaluates the loss of each option for the agent."""
@@ -125,7 +222,7 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
     prompt.statement(component_states)
     prompt.statement(f'The current time: {self._clock_now()} \n')
     prompt.statement(f'The characteristics of the current scenario in game theory perspective: {what_is_the_current_situation_result}\n')
-    prompt.statement(f'Reflection on the options: {reflection_on_the_options_result}\n')
+    prompt.statement(f'Reflection on the previous options: {reflection_on_the_options_result}\n')
     prompt.statement(f'Options available to {agent_name}: {options_perception}\n')
 
     loss_evaluation_result = prompt.open_question(
@@ -140,8 +237,6 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
       max_tokens=1000,
       terminators=(),
     )
-
-    loss_evaluation_result = f"{agent_name} thinks that ".format(agent_name=agent_name) + loss_evaluation_result
 
     self._logging_channel({
       'Key': self.get_pre_act_key(),
@@ -266,6 +361,24 @@ def build_agent(
     pre_act_key=loss_aversion_label,
     logging_channel=measurements.get_channel('LossAversion').on_next)
 
+  predict_other_people_actions_label = (
+      f'\nQuestion: Considering the above memories, the characteristics of the current scenario, and {agent_name}\'s thought about other people\'s tendencies, please predict other people\'s actions.'
+      '\nAnswer')
+
+  predict_other_people_actions = PredictOtherPeopleActions(
+    model=model,
+    components={
+      _get_class_name(observation): observation_label,
+      _get_class_name(observation_summary): observation_summary_label,
+      _get_class_name(relevant_memories): relevant_memories_label,
+      loss_aversion_label: loss_aversion_label,
+    },
+    clock_now=clock.now,
+    num_memories_to_retrieve=25,
+    pre_act_key=predict_other_people_actions_label,
+    logging_channel=measurements.get_channel('PredictOtherPeopleActions').on_next
+  )
+
   options_perception_components = {}
   if config.goal:
     goal_label = '\nOverarching goal'
@@ -313,6 +426,7 @@ def build_agent(
       _get_class_name(observation_summary): observation_summary_label,
       _get_class_name(relevant_memories): relevant_memories_label,
       loss_aversion_label: loss_aversion_label,
+      _get_class_name(predict_other_people_actions): predict_other_people_actions_label,
       _get_class_name(options_perception): options_perception_label,
     },
     clock_now=clock.now,
@@ -335,6 +449,7 @@ def build_agent(
       _get_class_name(relevant_memories): relevant_memories_label,
       _get_class_name(options_perception): options_perception_label,
       loss_aversion_label: loss_aversion_label,
+      _get_class_name(predict_other_people_actions): predict_other_people_actions_label,
       _get_class_name(loss_evaluation): loss_evaluation_label,
   })
   loss_minimize_option_perception = (
@@ -365,6 +480,7 @@ def build_agent(
       observation,
       observation_summary,
       relevant_memories,
+      predict_other_people_actions,
       options_perception,
       loss_evaluation,
       loss_minimize_option_perception,
