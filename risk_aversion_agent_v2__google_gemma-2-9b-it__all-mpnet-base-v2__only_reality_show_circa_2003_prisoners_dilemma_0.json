@@ -54,4 +54,32 @@
   "embedder": "all-mpnet-base-v2",
   "disable_language_model": false,
   "exclude_from_elo_calculation": false
+}{
+  "scenario": "reality_show_circa_2003_prisoners_dilemma_0",
+  "focal_agent": "risk_aversion_agent_v2",
+  "background_agent": "basic_agent",
+  "focal_per_capita_score": 16.0,
+  "background_per_capita_score": 16.0,
+  "ungrouped_per_capita_score": 16.0,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Derek Wolfe": 16.0,
+        "Travis Pearson": 16.0
+      },
+      "visitor_scores": {
+        "Ryan Fitzpatrick": 16.0
+      },
+      "metadata": {
+        "wallclock_time": "2024-11-09 17:29:13",
+        "environment": "/Users/russyun/programming/concordia_contest/examples/modular/environment/reality_show.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-9b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": false,
+  "exclude_from_elo_calculation": false
 }
