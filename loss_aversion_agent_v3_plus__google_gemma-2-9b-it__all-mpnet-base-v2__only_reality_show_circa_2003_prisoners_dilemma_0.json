@@ -138,4 +138,60 @@
   "embedder": "all-mpnet-base-v2",
   "disable_language_model": false,
   "exclude_from_elo_calculation": false
+}{
+  "scenario": "reality_show_circa_2003_prisoners_dilemma_0",
+  "focal_agent": "loss_aversion_agent_v3_plus",
+  "background_agent": "basic_agent",
+  "focal_per_capita_score": 15.5,
+  "background_per_capita_score": 10.0,
+  "ungrouped_per_capita_score": 13.666666666666666,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Derek Wolfe": 18.0,
+        "Travis Pearson": 13.0
+      },
+      "visitor_scores": {
+        "Ryan Fitzpatrick": 10.0
+      },
+      "metadata": {
+        "wallclock_time": "2024-11-10 04:56:28",
+        "environment": "/Users/russyun/programming/concordia_contest/examples/modular/environment/reality_show.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-9b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": false,
+  "exclude_from_elo_calculation": false
+}{
+  "scenario": "reality_show_circa_2003_prisoners_dilemma_0",
+  "focal_agent": "loss_aversion_agent_v3_plus",
+  "background_agent": "basic_agent",
+  "focal_per_capita_score": 17.0,
+  "background_per_capita_score": 8.0,
+  "ungrouped_per_capita_score": 14.0,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Derek Wolfe": 21.5,
+        "Travis Pearson": 12.5
+      },
+      "visitor_scores": {
+        "Ryan Fitzpatrick": 8.0
+      },
+      "metadata": {
+        "wallclock_time": "2024-11-10 20:45:29",
+        "environment": "/Users/russyun/programming/concordia_contest/examples/modular/environment/reality_show.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-9b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": false,
+  "exclude_from_elo_calculation": false
 }

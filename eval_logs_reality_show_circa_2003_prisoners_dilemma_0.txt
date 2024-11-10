@@ -1,0 +1,105 @@
+ 
+loss_aversion_predict_agent / scenario: reality_show_circa_2003_prisoners_dilemma_0
+time: 2024년 11월 10일 일요일 18시 33분 56초 KST
+Overall scores per player:
+Visitor
+  Ryan Fitzpatrick: 5.0
+Resident
+  Derek Wolfe: 12.5
+Resident
+  Travis Pearson: 24.5
+
+Scores:
+  Focal per capita score: 18.5
+  Background per capita score: 5.0
+  Ungrouped per capita score: 14.0
+ 
+loss_aversion_framing_agent / scenario: reality_show_circa_2003_prisoners_dilemma_0
+time: 2024년 11월 10일 일요일 18시 48분 48초 KST
+Overall scores per player:
+Visitor
+  Ryan Fitzpatrick: 4.0
+Resident
+  Derek Wolfe: 20.0
+Resident
+  Travis Pearson: 14.0
+
+Scores:
+  Focal per capita score: 17.0
+  Background per capita score: 4.0
+  Ungrouped per capita score: 12.666666666666666
+ 
+loss_aversion_agent_v3_plus2 / scenario: reality_show_circa_2003_prisoners_dilemma_0
+time: 2024년 11월 10일 일요일 19시 05분 12초 KST
+Overall scores per player:
+Visitor
+  Ryan Fitzpatrick: 4.0
+Resident
+  Derek Wolfe: 20.0
+Resident
+  Travis Pearson: 14.0
+
+Scores:
+  Focal per capita score: 17.0
+  Background per capita score: 4.0
+  Ungrouped per capita score: 12.666666666666666
+ 
+risk_aversion_reflect_agent / scenario: reality_show_circa_2003_prisoners_dilemma_0
+time: 2024년 11월 10일 일요일 19시 22분 12초 KST
+Overall scores per player:
+Visitor
+  Ryan Fitzpatrick: 16.0
+Resident
+  Derek Wolfe: 16.0
+Resident
+  Travis Pearson: 16.0
+
+Scores:
+  Focal per capita score: 16.0
+  Background per capita score: 16.0
+  Ungrouped per capita score: 16.0
+ 
+loss_aversion_reflect_agent / scenario: reality_show_circa_2003_prisoners_dilemma_0
+time: 2024년 11월 10일 일요일 19시 44분 53초 KST
+Overall scores per player:
+Visitor
+  Ryan Fitzpatrick: 6.0
+Resident
+  Derek Wolfe: 16.0
+Resident
+  Travis Pearson: 16.0
+
+Scores:
+  Focal per capita score: 16.0
+  Background per capita score: 6.0
+  Ungrouped per capita score: 12.666666666666666
+ 
+risk_aversion_predict_agent / scenario: reality_show_circa_2003_prisoners_dilemma_0
+time: 2024년 11월 10일 일요일 20시 07분 12초 KST
+Overall scores per player:
+Visitor
+  Ryan Fitzpatrick: 14.0
+Resident
+  Derek Wolfe: 17.0
+Resident
+  Travis Pearson: 17.0
+
+Scores:
+  Focal per capita score: 17.0
+  Background per capita score: 14.0
+  Ungrouped per capita score: 16.0
+ 
+loss_aversion_agent_v3_plus / scenario: reality_show_circa_2003_prisoners_dilemma_0
+time: 2024년 11월 10일 일요일 20시 26분 13초 KST
+Overall scores per player:
+Visitor
+  Ryan Fitzpatrick: 8.0
+Resident
+  Derek Wolfe: 21.5
+Resident
+  Travis Pearson: 12.5
+
+Scores:
+  Focal per capita score: 17.0
+  Background per capita score: 8.0
+  Ungrouped per capita score: 14.0

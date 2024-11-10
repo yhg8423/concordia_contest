@@ -26,4 +26,32 @@
   "embedder": "all-mpnet-base-v2",
   "disable_language_model": false,
   "exclude_from_elo_calculation": false
+}{
+  "scenario": "haggling_0",
+  "focal_agent": "loss_aversion_agent_v3_plus2",
+  "background_agent": "rational_agent",
+  "focal_per_capita_score": 8.0,
+  "background_per_capita_score": 11.0,
+  "ungrouped_per_capita_score": 9.0,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Lennon Figtree": 12.0,
+        "Cedric Meadowbrook": 4.0
+      },
+      "visitor_scores": {
+        "Della Plumstone": 11.0
+      },
+      "metadata": {
+        "wallclock_time": "2024-11-10 21:20:51",
+        "environment": "/Users/russyun/programming/concordia_contest/examples/modular/environment/haggling.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-9b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": false,
+  "exclude_from_elo_calculation": false
 }

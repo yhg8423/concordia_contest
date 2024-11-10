@@ -1,0 +1,105 @@
+ 
+loss_aversion_predict_agent / scenario: reality_show_circa_2015_prisoners_dilemma_0
+time: 2024년 11월 10일 일요일 13시 53분 12초 KST
+Overall scores per player:
+Visitor
+  Olly 'The Gov'ner' Smith: 19.0
+Resident
+  Josh 'Denz' Denzel: 19.0
+Resident
+  Sammy 'Birdman' Bird: 8.0
+
+Scores:
+  Focal per capita score: 13.5
+  Background per capita score: 19.0
+  Ungrouped per capita score: 15.333333333333334
+ 
+loss_aversion_framing_agent / scenario: reality_show_circa_2015_prisoners_dilemma_0
+time: 2024년 11월 10일 일요일 14시 27분 23초 KST
+Overall scores per player:
+Visitor
+  Olly 'The Gov'ner' Smith: 23.0
+Resident
+  Josh 'Denz' Denzel: 9.0
+Resident
+  Sammy 'Birdman' Bird: 23.0
+
+Scores:
+  Focal per capita score: 16.0
+  Background per capita score: 23.0
+  Ungrouped per capita score: 18.333333333333332
+ 
+loss_aversion_agent_v3_plus2 / scenario: reality_show_circa_2015_prisoners_dilemma_0
+time: 2024년 11월 10일 일요일 15시 12분 50초 KST
+Overall scores per player:
+Visitor
+  Olly 'The Gov'ner' Smith: 11.0
+Resident
+  Josh 'Denz' Denzel: 17.0
+Resident
+  Sammy 'Birdman' Bird: 22.0
+
+Scores:
+  Focal per capita score: 19.5
+  Background per capita score: 11.0
+  Ungrouped per capita score: 16.666666666666668
+ 
+risk_aversion_reflect_agent / scenario: reality_show_circa_2015_prisoners_dilemma_0
+time: 2024년 11월 10일 일요일 15시 54분 15초 KST
+Overall scores per player:
+Visitor
+  Olly 'The Gov'ner' Smith: 14.5
+Resident
+  Josh 'Denz' Denzel: 17.0
+Resident
+  Sammy 'Birdman' Bird: 20.5
+
+Scores:
+  Focal per capita score: 18.75
+  Background per capita score: 14.5
+  Ungrouped per capita score: 17.333333333333332
+ 
+loss_aversion_reflect_agent / scenario: reality_show_circa_2015_prisoners_dilemma_0
+time: 2024년 11월 10일 일요일 16시 41분 50초 KST
+Overall scores per player:
+Visitor
+  Olly 'The Gov'ner' Smith: 23.5
+Resident
+  Josh 'Denz' Denzel: 10.5
+Resident
+  Sammy 'Birdman' Bird: 15.0
+
+Scores:
+  Focal per capita score: 12.75
+  Background per capita score: 23.5
+  Ungrouped per capita score: 16.333333333333332
+ 
+risk_aversion_predict_agent / scenario: reality_show_circa_2015_prisoners_dilemma_0
+time: 2024년 11월 10일 일요일 17시 26분 17초 KST
+Overall scores per player:
+Visitor
+  Olly 'The Gov'ner' Smith: 7.5
+Resident
+  Josh 'Denz' Denzel: 23.5
+Resident
+  Sammy 'Birdman' Bird: 21.0
+
+Scores:
+  Focal per capita score: 22.25
+  Background per capita score: 7.5
+  Ungrouped per capita score: 17.333333333333332
+ 
+loss_aversion_agent_v3_plus / scenario: reality_show_circa_2015_prisoners_dilemma_0
+time: 2024년 11월 10일 일요일 17시 48분 55초 KST
+Overall scores per player:
+Visitor
+  Olly 'The Gov'ner' Smith: 15.5
+Resident
+  Josh 'Denz' Denzel: 17.5
+Resident
+  Sammy 'Birdman' Bird: 10.0
+
+Scores:
+  Focal per capita score: 13.75
+  Background per capita score: 15.5
+  Ungrouped per capita score: 14.333333333333334

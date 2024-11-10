@@ -155,6 +155,8 @@ class LossEvaluation(agent_components.action_spec_ignored.ActionSpecIgnored):
       terminators=(),
     )
 
+    loss_evaluation_result = f"{agent_name} thinks that ".format(agent_name=agent_name) + loss_evaluation_result
+
     self._logging_channel({
       'Key': self.get_pre_act_key(),
       'Decision': loss_evaluation_result,

@@ -1,0 +1,105 @@
+ 
+loss_aversion_predict_agent / scenario: haggling_0
+time: 2024년 11월 10일 일요일 21시 00분 42초 KST
+Overall scores per player:
+Visitor
+  Della Plumstone: 10.0
+Resident
+  Lennon Figtree: 11.0
+Resident
+  Cedric Meadowbrook: 6.0
+
+Scores:
+  Focal per capita score: 8.5
+  Background per capita score: 10.0
+  Ungrouped per capita score: 9.0
+ 
+loss_aversion_framing_agent / scenario: haggling_0
+time: 2024년 11월 10일 일요일 21시 07분 56초 KST
+Overall scores per player:
+Visitor
+  Della Plumstone: 6.0
+Resident
+  Lennon Figtree: 11.0
+Resident
+  Cedric Meadowbrook: 10.0
+
+Scores:
+  Focal per capita score: 10.5
+  Background per capita score: 6.0
+  Ungrouped per capita score: 9.0
+ 
+loss_aversion_agent_v3_plus2 / scenario: haggling_0
+time: 2024년 11월 10일 일요일 21시 14분 42초 KST
+Overall scores per player:
+Visitor
+  Della Plumstone: 11.0
+Resident
+  Lennon Figtree: 12.0
+Resident
+  Cedric Meadowbrook: 4.0
+
+Scores:
+  Focal per capita score: 8.0
+  Background per capita score: 11.0
+  Ungrouped per capita score: 9.0
+ 
+risk_aversion_reflect_agent / scenario: haggling_0
+time: 2024년 11월 10일 일요일 21시 20분 54초 KST
+Overall scores per player:
+Visitor
+  Della Plumstone: 4.0
+Resident
+  Lennon Figtree: 15.0
+Resident
+  Cedric Meadowbrook: 8.0
+
+Scores:
+  Focal per capita score: 11.5
+  Background per capita score: 4.0
+  Ungrouped per capita score: 9.0
+ 
+loss_aversion_reflect_agent / scenario: haggling_0
+time: 2024년 11월 10일 일요일 21시 27분 52초 KST
+Overall scores per player:
+Visitor
+  Della Plumstone: 10.0
+Resident
+  Lennon Figtree: 11.0
+Resident
+  Cedric Meadowbrook: 6.0
+
+Scores:
+  Focal per capita score: 8.5
+  Background per capita score: 10.0
+  Ungrouped per capita score: 9.0
+ 
+risk_aversion_predict_agent / scenario: haggling_0
+time: 2024년 11월 10일 일요일 21시 35분 00초 KST
+Overall scores per player:
+Visitor
+  Della Plumstone: 8.0
+Resident
+  Lennon Figtree: 10.0
+Resident
+  Cedric Meadowbrook: 9.0
+
+Scores:
+  Focal per capita score: 9.5
+  Background per capita score: 8.0
+  Ungrouped per capita score: 9.0
+ 
+loss_aversion_agent_v3_plus / scenario: haggling_0
+time: 2024년 11월 10일 일요일 21시 41분 40초 KST
+Overall scores per player:
+Visitor
+  Della Plumstone: 8.0
+Resident
+  Lennon Figtree: 10.0
+Resident
+  Cedric Meadowbrook: 9.0
+
+Scores:
+  Focal per capita score: 9.5
+  Background per capita score: 8.0
+  Ungrouped per capita score: 9.0

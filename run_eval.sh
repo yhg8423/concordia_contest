@@ -1,7 +1,9 @@
 #!/bin/bash
 
+scenario="haggling_0"
+
 # 로그 파일 설정
-LOG_FILE="eval_logs_prisoners.txt"
+LOG_FILE="eval_logs_${scenario}.txt"
 
 # 실행할 에이전트 목록
 agents=(
@@ -10,10 +12,11 @@ agents=(
   "loss_aversion_agent_v3_plus2"
   "risk_aversion_reflect_agent"
   "loss_aversion_reflect_agent"
-  "loss_aversion_justify_agent"
+  "risk_aversion_predict_agent"
+  # "loss_aversion_justify_agent"
   "loss_aversion_agent_v3_plus"
-  "strategic_agent_v3"
-  "opportunist_agent_v4"
+  # "strategic_agent_v3"
+  # "opportunist_agent_v4"
 )
 
 # 각 에이전트에 대해 반복
@@ -23,12 +26,12 @@ for ((i=0; i<${#agents[@]}; i++)); do
 
   echo "${count}번째 명령어를 실행 중입니다..."
   echo " " >> $LOG_FILE
-  echo "${agent} / scenario: reality_show_circa_2003_prisoners_dilemma_0" >> $LOG_FILE
+  echo "${agent} / scenario: ${scenario}" >> $LOG_FILE
   echo "time: $(date)" >> $LOG_FILE
 
   PYTHONPATH=. PYTHONSAFEPATH=1 python3.10 examples/modular/launch_one_scenario.py \
     --agent=${agent} \
-    --scenario=reality_show_circa_2003_prisoners_dilemma_0 \
+    --scenario=${scenario} \
     --api_type=together_ai \
     --model=google/gemma-2-9b-it \
     --num_repetitions_per_scenario=1 | tail -n 12 >> $LOG_FILE

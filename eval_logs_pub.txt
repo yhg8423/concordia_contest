@@ -1,0 +1,135 @@
+ 
+loss_aversion_predict_agent / scenario: pub_coordination_0
+time: 2024년 11월 10일 일요일 10시 13분 07초 KST
+  Alexander White: 5.0
+Resident
+  William Jones: 5.0
+Resident
+  Thomas Wilson: 5.0
+Resident
+  Poppy Evans: 5.0
+
+Scores:
+  Focal per capita score: 4.0
+  Background per capita score: 5.0
+  Ungrouped per capita score: 4.5
+ 
+loss_aversion_framing_agent / scenario: pub_coordination_0
+time: 2024년 11월 10일 일요일 10시 24분 36초 KST
+  Alexander White: 5.0
+Resident
+  William Jones: 5.0
+Resident
+  Thomas Wilson: 5.0
+Resident
+  Poppy Evans: 5.0
+
+Scores:
+  Focal per capita score: 4.0
+  Background per capita score: 5.0
+  Ungrouped per capita score: 4.5
+ 
+loss_aversion_agent_v3_plus2 / scenario: pub_coordination_0
+time: 2024년 11월 10일 일요일 10시 36분 05초 KST
+  Alexander White: 5.0
+Resident
+  William Jones: 5.0
+Resident
+  Thomas Wilson: 5.0
+Resident
+  Poppy Evans: 5.0
+
+Scores:
+  Focal per capita score: 4.0
+  Background per capita score: 5.0
+  Ungrouped per capita score: 4.5
+ 
+risk_aversion_reflect_agent / scenario: pub_coordination_0
+time: 2024년 11월 10일 일요일 10시 47분 25초 KST
+  Alexander White: 5.0
+Resident
+  William Jones: 5.0
+Resident
+  Thomas Wilson: 5.0
+Resident
+  Poppy Evans: 5.0
+
+Scores:
+  Focal per capita score: 4.0
+  Background per capita score: 5.0
+  Ungrouped per capita score: 4.5
+ 
+loss_aversion_reflect_agent / scenario: pub_coordination_0
+time: 2024년 11월 10일 일요일 10시 59분 06초 KST
+  Alexander White: 5.0
+Resident
+  William Jones: 5.0
+Resident
+  Thomas Wilson: 5.0
+Resident
+  Poppy Evans: 5.0
+
+Scores:
+  Focal per capita score: 4.0
+  Background per capita score: 5.0
+  Ungrouped per capita score: 4.5
+ 
+loss_aversion_justify_agent / scenario: pub_coordination_0
+time: 2024년 11월 10일 일요일 11시 10분 51초 KST
+  Alexander White: 5.0
+Resident
+  William Jones: 5.0
+Resident
+  Thomas Wilson: 5.0
+Resident
+  Poppy Evans: 5.0
+
+Scores:
+  Focal per capita score: 4.0
+  Background per capita score: 5.0
+  Ungrouped per capita score: 4.5
+ 
+loss_aversion_agent_v3_plus / scenario: pub_coordination_0
+time: 2024년 11월 10일 일요일 11시 21분 33초 KST
+  Alexander White: 5.0
+Resident
+  William Jones: 5.0
+Resident
+  Thomas Wilson: 5.0
+Resident
+  Poppy Evans: 5.0
+
+Scores:
+  Focal per capita score: 4.0
+  Background per capita score: 5.0
+  Ungrouped per capita score: 4.5
+ 
+strategic_agent_v3 / scenario: pub_coordination_0
+time: 2024년 11월 10일 일요일 11시 32분 32초 KST
+  Alexander White: 4.8
+Resident
+  William Jones: 4.8
+Resident
+  Thomas Wilson: 4.8
+Resident
+  Poppy Evans: 4.8
+
+Scores:
+  Focal per capita score: 3.2
+  Background per capita score: 4.8
+  Ungrouped per capita score: 4.0
+ 
+opportunist_agent_v4 / scenario: pub_coordination_0
+time: 2024년 11월 10일 일요일 11시 44분 05초 KST
+  Alexander White: 4.8
+Resident
+  William Jones: 4.8
+Resident
+  Thomas Wilson: 4.8
+Resident
+  Poppy Evans: 4.8
+
+Scores:
+  Focal per capita score: 3.2
+  Background per capita score: 4.8
+  Ungrouped per capita score: 4.0
