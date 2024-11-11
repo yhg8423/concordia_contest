@@ -26,4 +26,32 @@
   "embedder": "all-mpnet-base-v2",
   "disable_language_model": false,
   "exclude_from_elo_calculation": false
+}{
+  "scenario": "reality_show_circa_2015_prisoners_dilemma_0",
+  "focal_agent": "loss_aversion_reflect_agent",
+  "background_agent": "parochial_universalization_agent",
+  "focal_per_capita_score": 19.25,
+  "background_per_capita_score": 6.5,
+  "ungrouped_per_capita_score": 15.0,
+  "simulation_outcomes": [
+    {
+      "resident_scores": {
+        "Josh 'Denz' Denzel": 22.0,
+        "Sammy 'Birdman' Bird": 16.5
+      },
+      "visitor_scores": {
+        "Olly 'The Gov'ner' Smith": 6.5
+      },
+      "metadata": {
+        "wallclock_time": "2024-11-11 20:24:35",
+        "environment": "/Users/russyun/programming/concordia_contest/examples/modular/environment/reality_show.py"
+      }
+    }
+  ],
+  "focal_is_resident": true,
+  "api_type": "together_ai",
+  "model": "google/gemma-2-9b-it",
+  "embedder": "all-mpnet-base-v2",
+  "disable_language_model": false,
+  "exclude_from_elo_calculation": false
 }
