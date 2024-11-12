@@ -6,7 +6,8 @@ scenarios=(
   "reality_show_circa_2003_prisoners_dilemma_0"
   "reality_show_circa_2015_prisoners_dilemma_0"
 )
-agent="loss_aversion_agent_v3_plus2"
+# agent="loss_aversion_agent_v3_plus2"
+agent="loss_aversion_framing_agent"
 
 # 로그 파일 설정
 LOG_FILE="eval_logs_${agent}.txt"
