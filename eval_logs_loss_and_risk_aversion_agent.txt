@@ -1,0 +1,120 @@
+ 
+loss_and_risk_aversion_agent / scenario: haggling_0
+time: 2024년 11월 14일 목요일 22시 58분 51초 KST
+Overall scores per player:
+Visitor
+  Della Plumstone: 4.0
+Resident
+  Lennon Figtree: 10.0
+Resident
+  Cedric Meadowbrook: 13.0
+
+Scores:
+  Focal per capita score: 11.5
+  Background per capita score: 4.0
+  Ungrouped per capita score: 9.0
+ 
+loss_and_risk_aversion_agent / scenario: pub_coordination_0
+time: 2024년 11월 14일 목요일 23시 09분 59초 KST
+  Alexander White: 5.0
+Resident
+  William Jones: 5.0
+Resident
+  Thomas Wilson: 5.0
+Resident
+  Poppy Evans: 5.0
+
+Scores:
+  Focal per capita score: 4.0
+  Background per capita score: 5.0
+  Ungrouped per capita score: 4.5
+ 
+loss_and_risk_aversion_agent / scenario: reality_show_circa_2003_prisoners_dilemma_0
+time: 2024년 11월 14일 목요일 23시 23분 56초 KST
+Overall scores per player:
+Visitor
+  Ryan Fitzpatrick: 16.0
+Resident
+  Derek Wolfe: 16.0
+Resident
+  Travis Pearson: 16.0
+
+Scores:
+  Focal per capita score: 16.0
+  Background per capita score: 16.0
+  Ungrouped per capita score: 16.0
+ 
+loss_and_risk_aversion_agent / scenario: reality_show_circa_2015_prisoners_dilemma_0
+time: 2024년 11월 14일 목요일 23시 44분 29초 KST
+Overall scores per player:
+Visitor
+  Olly 'The Gov'ner' Smith: 16.5
+Resident
+  Josh 'Denz' Denzel: 11.0
+Resident
+  Sammy 'Birdman' Bird: 13.5
+
+Scores:
+  Focal per capita score: 12.25
+  Background per capita score: 16.5
+  Ungrouped per capita score: 13.666666666666666
+ 
+loss_and_risk_aversion_agent / scenario: haggling_0
+time: 2024년 11월 15일 금요일 00시 28분 05초 KST
+Overall scores per player:
+Visitor
+  Della Plumstone: 9.0
+Resident
+  Lennon Figtree: 9.0
+Resident
+  Cedric Meadowbrook: 9.0
+
+Scores:
+  Focal per capita score: 9.0
+  Background per capita score: 9.0
+  Ungrouped per capita score: 9.0
+ 
+loss_and_risk_aversion_agent / scenario: pub_coordination_0
+time: 2024년 11월 15일 금요일 00시 38분 47초 KST
+  Alexander White: 5.0
+Resident
+  William Jones: 5.0
+Resident
+  Thomas Wilson: 5.0
+Resident
+  Poppy Evans: 5.0
+
+Scores:
+  Focal per capita score: 4.0
+  Background per capita score: 5.0
+  Ungrouped per capita score: 4.5
+ 
+loss_and_risk_aversion_agent / scenario: reality_show_circa_2003_prisoners_dilemma_0
+time: 2024년 11월 15일 금요일 00시 55분 18초 KST
+Overall scores per player:
+Visitor
+  Ryan Fitzpatrick: 12.5
+Resident
+  Derek Wolfe: 21.0
+Resident
+  Travis Pearson: 12.5
+
+Scores:
+  Focal per capita score: 16.75
+  Background per capita score: 12.5
+  Ungrouped per capita score: 15.333333333333334
+ 
+loss_and_risk_aversion_agent / scenario: reality_show_circa_2015_prisoners_dilemma_0
+time: 2024년 11월 15일 금요일 01시 44분 57초 KST
+Overall scores per player:
+Visitor
+  Olly 'The Gov'ner' Smith: 6.5
+Resident
+  Josh 'Denz' Denzel: 16.5
+Resident
+  Sammy 'Birdman' Bird: 19.0
+
+Scores:
+  Focal per capita score: 17.75
+  Background per capita score: 6.5
+  Ungrouped per capita score: 14.0
