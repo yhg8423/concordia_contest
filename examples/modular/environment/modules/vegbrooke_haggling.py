@@ -118,7 +118,10 @@ def sample_parameters(seed: int | None = None):
       scene_visuals=VISUAL_SCENE_OPENINGS,
       buyer_base_reward_min=2,
       seller_base_reward_max=5,
+      num_supporting_players=0,
+      num_main_players=4,
       random_seed=seed,
+      num_games=2,
   )
   rng = random.Random(config.random_seed)
 
